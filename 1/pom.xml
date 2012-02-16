@@ -65,6 +65,16 @@
                     </execution>
                 </executions>
             </plugin>
+    
+<plugin>
+<groupId>org.apache.maven.plugins</groupId>
+<artifactId>maven-compiler-plugin</artifactId>
+<!-- best lock down version of the plugin too -->
+<configuration>
+<source>1.5</source>
+<target>1.5</target>
+</configuration>
+</plugin>
         </plugins>
     </build>
 
