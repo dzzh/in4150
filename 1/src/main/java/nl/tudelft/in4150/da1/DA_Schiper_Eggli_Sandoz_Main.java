@@ -25,7 +25,7 @@ public class DA_Schiper_Eggli_Sandoz_Main {
 
         Configuration config = null;
         try{
-            config = new PropertiesConfiguration("classpath:network.cfg");
+            config = new PropertiesConfiguration("network.cfg");
         } catch (ConfigurationException e) {
             e.printStackTrace();
         }
