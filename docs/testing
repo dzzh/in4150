@@ -1,0 +1,43 @@
+TESTING
+
+Testcases
+
+Three processes: P1, P2, P3
+Three messages: m1, m2, m3
+
+Testcase1:
+(P1 sends m1 to P2) --> (P2 sends m2 to P3) --> (P1 sends m3 to P3)
+
+Testcase2:
+Figure 3.5 of [1]
+
+Testcase3:
+P1 sends m1 to P2
+P2 sends m2 to P3
+P1 sends m3 to P3 but m3 arrives before m2 (is ok i think)
+
+Testcase4:
+P1 sends m1 to P2
+P1 sends m2 to P2 but m2 arrives before m1
+
+Testcase5:
+P1 sends m1 to P2
+P1 sends m2 to P2 but m2 arrives before m1 and m2 depends on m1
+P2 sends m3 to P3 but m3 depends on m2
+
+
+Test Setup
+There is a centralized test manager class which tells when (and thus in which order) the process classes should send messages. This class should probaly also take care of the possible delays needed in the tests. When a class has received a message it informs the central test manager so it can keep track of the order of things. For the communication between processes and the test manager class RMI methods can be used.
+
+
+
+
+-- OLD IDEA --
+To simulate latency just wait before sending a certain message, so basicaly you send them out of order.
+
+To record all events implement an "Observer" class that extends the Remote interface. This class contains functions methods to record events. Each process should call these methods immediately after each event. To assure correct order processes must obtain a token before they are allowed to record an event.
+-- OLD IDEA --
+
+
+References:
+[1] Lecture Note
