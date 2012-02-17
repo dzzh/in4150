@@ -22,7 +22,7 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
 
     private Map<Integer, List<Integer>> sendBuffer;
     private List<Message> pendingBuffer;
-    private Map<String, DA_Schiper_Eggli_Sandoz> cache;
+    private Map<String, DA_Schiper_Eggli_Sandoz_RMI> cache;
     private List<Integer> clock;
     private String id;
     private int index;
@@ -30,7 +30,7 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
 
     protected DA_Schiper_Eggli_Sandoz(int numProcesses, int index, String id) throws RemoteException {
         super();
-        cache = new HashMap<String, DA_Schiper_Eggli_Sandoz>();
+        cache = new HashMap<String, DA_Schiper_Eggli_Sandoz_RMI>();
         sendBuffer = new HashMap<Integer, List<Integer>>();
         pendingBuffer = new LinkedList<Message>();
         
@@ -49,6 +49,8 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
 
     public synchronized void receive(Message message) throws RemoteException {
 
+        LOGGER.info("Receive invoked");
+        
         if (message.getDelay() > 0){
             new Thread(new DelayedReceipt(this, message)).start();
             return;
@@ -74,22 +76,22 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
 
     public void send(String url, Message message){
         clock.set(index, clock.get(index) + 1);
-        DA_Schiper_Eggli_Sandoz dest = getProcess(url);
+        DA_Schiper_Eggli_Sandoz_RMI dest = getProcess(url);
         message.setClock(clock);
         message.setSendBuffer(sendBuffer);
         try{
             dest.receive(message);
+            sendBuffer.put(dest.getIndex(), clock);
         } catch (RemoteException e){
             e.printStackTrace();
         }
-        sendBuffer.put(dest.getIndex(), clock);
     }
     
-    private DA_Schiper_Eggli_Sandoz getProcess(String url){
-        DA_Schiper_Eggli_Sandoz result = cache.get(url);
+    private DA_Schiper_Eggli_Sandoz_RMI getProcess(String url){
+        DA_Schiper_Eggli_Sandoz_RMI result = cache.get(url);
         if (result == null){
             try{
-                result = (DA_Schiper_Eggli_Sandoz)Naming.lookup(url);
+                result = (DA_Schiper_Eggli_Sandoz_RMI)Naming.lookup(url);
             } catch(RemoteException e1){
                 e1.printStackTrace();
             } catch (MalformedURLException e2){

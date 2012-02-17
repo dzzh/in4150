@@ -18,7 +18,7 @@ public class ProcessManager {
     private static final String RMI_PREFIX ="rmi://";
     private static final Log LOGGER = LogFactory.getLog(ProcessManager.class);
 
-    private ArrayList<DA_Schiper_Eggli_Sandoz> processes;
+    private ArrayList<DA_Schiper_Eggli_Sandoz_RMI> processes;
 
     /**
      * Launches server instance
@@ -34,19 +34,19 @@ public class ProcessManager {
         }
 
         String[] urls = config.getStringArray("node.url");
-        processes = new ArrayList<DA_Schiper_Eggli_Sandoz>();
+        processes = new ArrayList<DA_Schiper_Eggli_Sandoz_RMI>();
 
         //bind local processes and locate remote ones
         int processIndex = 0;
         for (String url : urls){
             try{
-                DA_Schiper_Eggli_Sandoz process;
+                DA_Schiper_Eggli_Sandoz_RMI process;
                 if (isProcessLocal(url)){
                     process = new DA_Schiper_Eggli_Sandoz(urls.length, processIndex, extractProcessId(url));
-                    new Thread(process).start();
+                    new Thread((DA_Schiper_Eggli_Sandoz)process).start();
                     Naming.bind(url, process);
                 } else {
-                    process = (DA_Schiper_Eggli_Sandoz)Naming.lookup(url);
+                    process = (DA_Schiper_Eggli_Sandoz_RMI)Naming.lookup(url);
                 }
                 processIndex++;
                 processes.add(process);

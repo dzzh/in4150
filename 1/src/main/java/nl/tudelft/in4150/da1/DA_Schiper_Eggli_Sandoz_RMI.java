@@ -26,5 +26,7 @@ public interface DA_Schiper_Eggli_Sandoz_RMI extends Remote{
      * @throws RemoteException
      */
     public void receive(Message message) throws RemoteException;
+    
+    public int getIndex() throws RemoteException;
 
 }

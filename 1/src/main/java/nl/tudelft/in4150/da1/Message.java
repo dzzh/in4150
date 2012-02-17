@@ -9,16 +9,14 @@ public class Message implements Serializable {
     int id = 0;
     Map<Integer, List<Integer>> sendBuffer;
     List<Integer> clock;
-    String value;
     int srcId;
     int destId;
     int delay = 0;
 
-    public Message(String value, int srcId, int destId) {
-        this.value = value;
+    public Message(int id, int srcId, int destId) {
+        this.id = id;
         this.srcId = srcId;
         this.destId = destId;
-        delay = 0;
     }
 
     public Map<Integer, List<Integer>> getSendBuffer() {
@@ -27,10 +25,6 @@ public class Message implements Serializable {
 
     public List<Integer> getClock() {
         return clock;
-    }
-
-    public String getValue() {
-        return value;
     }
 
     public int getSrcId() {
