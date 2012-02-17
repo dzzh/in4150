@@ -4,13 +4,22 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Data class describing messages to be excahnged by remote processes.
+ */
 public class Message implements Serializable {
 
     int id = 0;
     Map<Integer, List<Integer>> sendBuffer;
     List<Integer> clock;
+
+    //id of source process
     int srcId;
+
+    //id of destination process
     int destId;
+
+    //if above 0, message receipt will be delayed for delay ms
     int delay = 0;
 
     public Message(int id, int srcId, int destId) {
@@ -31,10 +40,6 @@ public class Message implements Serializable {
         return srcId;
     }
 
-    public int getDestId() {
-        return destId;
-    }
-
     public int getDelay() {
         return delay;
     }
@@ -47,15 +52,21 @@ public class Message implements Serializable {
         return id;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
     public void setSendBuffer(Map<Integer, List<Integer>> sendBuffer) {
         this.sendBuffer = sendBuffer;
     }
 
     public void setClock(List<Integer> clock) {
         this.clock = clock;
+    }
+
+    @Override
+    public String toString() {
+        return "Message{" +
+                "id=" + id +
+                ", srcId=" + srcId +
+                ", destId=" + destId +
+                ", delay=" + delay +
+                '}';
     }
 }

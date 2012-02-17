@@ -2,8 +2,6 @@ package nl.tudelft.in4150.da1;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Remote interface to support RMI operations for Schiper-Eggli-Sandoz casual ordering
@@ -20,13 +18,18 @@ public interface DA_Schiper_Eggli_Sandoz_RMI extends Remote{
     public void send(String url, Message message) throws RemoteException;
     
     /**
-     * Receives message from a remote node. Assures that all the messages
-     * will be delivered in a casual order.
+     * Receives message from a (remote) process. All the messages
+     * are delivered in a casual order.
      * @param message transmitted message
      * @throws RemoteException
      */
     public void receive(Message message) throws RemoteException;
-    
+
+    /**
+     * Index of a current process
+     * @return index
+     * @throws RemoteException
+     */
     public int getIndex() throws RemoteException;
 
 }

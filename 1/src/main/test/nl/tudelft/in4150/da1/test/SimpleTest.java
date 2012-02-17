@@ -25,8 +25,13 @@ public class SimpleTest{
         DA_Schiper_Eggli_Sandoz_RMI process1 = setup.getProcesses().get(0);
         DA_Schiper_Eggli_Sandoz_RMI process2 = setup.getProcesses().get(1);
         try{
-            Message message = new Message(0,process1.getIndex(),process2.getIndex());
+            Message message = new Message(1,process1.getIndex(),process2.getIndex());
+            message.setDelay(1000);
             process1.send(setup.getUrls()[process2.getIndex()],message);
+
+            message = new Message(2, process1.getIndex(), process2.getIndex());
+            process1.send(setup.getUrls()[process2.getIndex()],message);
+
         } catch (RemoteException e){
             e.printStackTrace();
             Assert.fail();

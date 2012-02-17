@@ -5,21 +5,21 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 
 import java.net.MalformedURLException;
-import java.rmi.AlreadyBoundException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Initiates values needed for testing
+ */
 public class TestSetup {
 
     private List<DA_Schiper_Eggli_Sandoz_RMI> processes;
     private String[] urls;
 
-    public TestSetup() {
-
-    }
+    public TestSetup() { }
 
     public void init(){
 

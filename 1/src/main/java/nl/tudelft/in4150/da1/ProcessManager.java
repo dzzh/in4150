@@ -3,8 +3,6 @@ package nl.tudelft.in4150.da1;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.net.MalformedURLException;
 import java.rmi.AlreadyBoundException;
@@ -16,8 +14,6 @@ import java.util.ArrayList;
 public class ProcessManager {
 
     private static final String RMI_PREFIX ="rmi://";
-    private static final Log LOGGER = LogFactory.getLog(ProcessManager.class);
-
     private ArrayList<DA_Schiper_Eggli_Sandoz_RMI> processes;
 
     /**
@@ -42,7 +38,7 @@ public class ProcessManager {
             try{
                 DA_Schiper_Eggli_Sandoz_RMI process;
                 if (isProcessLocal(url)){
-                    process = new DA_Schiper_Eggli_Sandoz(urls.length, processIndex, extractProcessId(url));
+                    process = new DA_Schiper_Eggli_Sandoz(urls.length, processIndex);
                     new Thread((DA_Schiper_Eggli_Sandoz)process).start();
                     Naming.bind(url, process);
                 } else {
@@ -68,8 +64,4 @@ public class ProcessManager {
         return url.startsWith(RMI_PREFIX + "localhost");
     }
     
-    private String extractProcessId(String url){
-        return url.substring(url.lastIndexOf("/") + 1);
-    }
-
 }
