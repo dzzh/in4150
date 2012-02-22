@@ -8,28 +8,33 @@
     <artifactId>DA-1</artifactId>
     <version>1.0</version>
 
-     <dependencies>
-         <dependency>
-             <groupId>commons-configuration</groupId>
-             <artifactId>commons-configuration</artifactId>
-             <version>1.7</version>
-         </dependency>
-         <dependency>
-             <groupId>commons-logging</groupId>
-             <artifactId>commons-logging</artifactId>
-             <version>1.1.1</version>
-         </dependency>
-         <dependency>
-             <groupId>commons-lang</groupId>
-             <artifactId>commons-lang</artifactId>
-             <version>2.6</version>
-         </dependency>
-         <dependency>
-             <groupId>commons-collections</groupId>
-             <artifactId>commons-collections</artifactId>
-             <version>3.2.1</version>
-         </dependency>
-     </dependencies>
+    <dependencies>
+        <dependency>
+            <groupId>commons-configuration</groupId>
+            <artifactId>commons-configuration</artifactId>
+            <version>1.7</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>1.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.6</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>3.2.1</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.10</version>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
@@ -65,16 +70,15 @@
                     </execution>
                 </executions>
             </plugin>
-    
-<plugin>
-<groupId>org.apache.maven.plugins</groupId>
-<artifactId>maven-compiler-plugin</artifactId>
-<!-- best lock down version of the plugin too -->
-<configuration>
-<source>1.5</source>
-<target>1.5</target>
-</configuration>
-</plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
