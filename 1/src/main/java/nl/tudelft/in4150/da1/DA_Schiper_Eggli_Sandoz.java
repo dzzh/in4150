@@ -39,7 +39,7 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
         this.numProcesses = numProcesses;
         this.clock = new ArrayList<Integer>(numProcesses);
         for (int i = 0; i < numProcesses; i++){
-            clock.set(i, 0);
+            clock.add(0);
         }
     }
 
