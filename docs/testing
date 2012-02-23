@@ -23,7 +23,7 @@ P1 sends m2 to P2 but m2 arrives before m1
 Testcase5:
 P1 sends m1 to P2
 P1 sends m2 to P2 but m2 arrives before m1 and m2 depends on m1
-P2 sends m3 to P3 but m3 depends on m2
+P2 sends m3 to P3 (but m3 depends on m2 <-- not true)
 
 
 Test Setup
