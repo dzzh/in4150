@@ -6,7 +6,6 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.File;
 import java.net.MalformedURLException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.Naming;
@@ -29,14 +28,13 @@ public class ProcessManager {
         //read network configuration
         Configuration config = null;
         try{
-            File configFile = new File("network.cfg");
-            if (configFile.exists()){
-                config = new PropertiesConfiguration("network.cfg");
-            } else {
-                config = new PropertiesConfiguration("network.cfg.default");
-            }
+            config = new PropertiesConfiguration("network.cfg");
         } catch (ConfigurationException e) {
-            e.printStackTrace();
+            try{
+                config = new PropertiesConfiguration("network.cfg.default");
+            } catch (ConfigurationException e2) {
+                e2.printStackTrace();
+            }
         }
 
         String[] urls = config.getStringArray("node.url");
