@@ -9,6 +9,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 
@@ -47,6 +48,7 @@ public class SimpleTest{
     }
     
     @Test
+    @Ignore
     public void testcase1(){
         DA_Schiper_Eggli_Sandoz_RMI process1 = setup.getProcesses().get(0);
         DA_Schiper_Eggli_Sandoz_RMI process2 = setup.getProcesses().get(1);
@@ -75,6 +77,7 @@ public class SimpleTest{
     }
     
     @Test
+    @Ignore
     public void testcase2(){
         DA_Schiper_Eggli_Sandoz_RMI process1 = setup.getProcesses().get(0);
         DA_Schiper_Eggli_Sandoz_RMI process2 = setup.getProcesses().get(1);
@@ -103,6 +106,7 @@ public class SimpleTest{
     }
     
     @Test
+    @Ignore
     public void testcase3(){
         DA_Schiper_Eggli_Sandoz_RMI process1 = setup.getProcesses().get(0);
         DA_Schiper_Eggli_Sandoz_RMI process2 = setup.getProcesses().get(1);
@@ -131,6 +135,7 @@ public class SimpleTest{
     }
     
     @Test
+    @Ignore
     public void testcase4(){
         DA_Schiper_Eggli_Sandoz_RMI process1 = setup.getProcesses().get(0);
         DA_Schiper_Eggli_Sandoz_RMI process2 = setup.getProcesses().get(1);
@@ -152,8 +157,9 @@ public class SimpleTest{
             Assert.fail();
         }
     }
-    
+
     @Test
+    @Ignore
     public void testcase5(){
         DA_Schiper_Eggli_Sandoz_RMI process1 = setup.getProcesses().get(0);
         DA_Schiper_Eggli_Sandoz_RMI process2 = setup.getProcesses().get(1);
