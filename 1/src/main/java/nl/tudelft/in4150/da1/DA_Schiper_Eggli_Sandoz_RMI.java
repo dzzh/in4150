@@ -40,4 +40,10 @@ public interface DA_Schiper_Eggli_Sandoz_RMI extends Remote{
      */
     public List<Message> getReceivedMessages() throws RemoteException;
 
+    /**
+     * Resets the state of current process allowing to run several test cases without restart.
+     * @throws RemoteException
+     */
+    public void reset() throws RemoteException;
+
 }

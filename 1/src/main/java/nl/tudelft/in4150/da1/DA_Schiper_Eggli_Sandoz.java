@@ -83,6 +83,20 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public void reset(){
+        sendBuffer = new HashMap<Integer, List<Integer>>();
+        pendingBuffer = new LinkedList<Message>();
+        receivedMessages = new LinkedList<Message>();
+
+        this.clock = new ArrayList<Integer>(numProcesses);
+        for (int i = 0; i < numProcesses; i++) {
+            clock.add(0);
+        }
+    }
+
+    /**
      * Multi-threading support
      */
     public void run() {
@@ -105,6 +119,8 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
             return;
         }
 
+        LOGGER.debug("Received message " + message.getId() +". Contents of pending buffer: " + pendingBuffer);
+        
         if (isDeliveryAllowed(message)) {
             deliver(message);
 
@@ -127,15 +143,15 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
      * {@inheritDoc}
      */
     public void send(String url, Message message) {
-        increaseLocalClock();
+        increaseLocalClock(clock);
         DA_Schiper_Eggli_Sandoz_RMI dest = getProcess(url);
         LOGGER.debug("Contents of send buffer at process " + index +
-                " before sending message " + message.getId() + " " + sendBuffer);
+                " before sending message " + message.getId() + ": " + sendBuffer);
         message.setClock(clock);
         message.setSendBuffer(sendBuffer);
         try {
             dest.receive(message);
-            sendBuffer.put(dest.getIndex(), clock);
+            sendBuffer.put(dest.getIndex(), new ArrayList<Integer>(clock));
         } catch (RemoteException e) {
             e.printStackTrace();
         }
@@ -169,7 +185,9 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
      */
     private void deliver(Message message) {
         processMessage(message);
-        increaseLocalClock();
+        increaseLocalClock(clock);
+        
+        clock = mergeClocks(clock, message.getClock());
 
         List<Map.Entry<Integer, List<Integer>>> messageBuffer =
                 new ArrayList<Map.Entry<Integer, List<Integer>>>(message.getSendBuffer().entrySet());
@@ -198,8 +216,9 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
 
     /**
      * Updates local clock upon event occurrence.
+     * @param clock - clock to update
      */
-    private void increaseLocalClock() {
+    private void increaseLocalClock(List<Integer> clock) {
         clock.set(index, clock.get(index) + 1);
     }
 
@@ -214,7 +233,7 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
     private List<Integer> mergeClocks(List<Integer> clock1, List<Integer> clock2) {
         List<Integer> maxClock = new ArrayList<Integer>(numProcesses);
         for (int i = 0; i < numProcesses; i++) {
-            maxClock.set(i, Math.max(clock1.get(i), clock2.get(i)));
+            maxClock.add(Math.max(clock1.get(i), clock2.get(i)));
         }
         return maxClock;
     }
@@ -228,15 +247,18 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
      */
     private boolean isDeliveryAllowed(Message message) {
 
-        if (!sendBuffer.containsKey(message.getSrcId()) && !message.getSendBuffer().containsKey(index)) {
+        if (//!sendBuffer.containsKey(message.getSrcId()) && 
+            !message.getSendBuffer().containsKey(index)) {
             return true;
         }
 
         boolean result = true;
         List<Integer> localClockCopy = new ArrayList<Integer>(clock);
-        localClockCopy.set(index, localClockCopy.get(index) + 1);
+        increaseLocalClock(localClockCopy);
+        //localClockCopy = mergeClocks(localClockCopy, message.getClock());
+        List<Integer> accompanyingClock = message.getSendBuffer().get(index);
         for (int i = 0; i < numProcesses; i++) {
-            if (localClockCopy.get(i) > message.getClock().get(i)) {
+            if (localClockCopy.get(i) < accompanyingClock.get(i)) {
                 result = false;
                 break;
             }

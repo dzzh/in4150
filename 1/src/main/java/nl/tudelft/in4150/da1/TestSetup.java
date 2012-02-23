@@ -38,6 +38,7 @@ public class TestSetup {
         for (String url : urls){
             try{
                 DA_Schiper_Eggli_Sandoz_RMI process = (DA_Schiper_Eggli_Sandoz_RMI) Naming.lookup(url);
+                process.reset();
                 processes.add(process);
 
             } catch (RemoteException e1){
