@@ -38,7 +38,7 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
     /**
      * List to store all received messages for debugging purposes.
      */
-    private List<Message> receivedMessages;
+    private LinkedList<Message> receivedMessages;
 
     /**
      * Cache to fasten lookup operations in remote registries
@@ -273,10 +273,8 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
         return index;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public List<Message> getReceivedMessages() {
-        return this.receivedMessages;
+    @Override
+    public LinkedList<Message> getMessages() throws RemoteException {
+        return receivedMessages;
     }
 }

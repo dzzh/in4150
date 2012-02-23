@@ -2,6 +2,7 @@ package nl.tudelft.in4150.da1;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -38,7 +39,7 @@ public interface DA_Schiper_Eggli_Sandoz_RMI extends Remote{
      * @return messages
      * @throws RemoteException
      */
-    public List<Message> getReceivedMessages() throws RemoteException;
+    public LinkedList<Message> getMessages() throws RemoteException;
 
     /**
      * Resets the state of current process allowing to run several test cases without restart.
