@@ -1,10 +1,11 @@
 package nl.tudelft.in4150.da1;
 
+import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 
 /**
- * Main class to initiate RMI registry and start message exchange
+ * Main class to initiate RMI registry and start servers
  */
 public class DA_Schiper_Eggli_Sandoz_Main {
     
@@ -22,7 +23,6 @@ public class DA_Schiper_Eggli_Sandoz_Main {
 //        }
 
         new ProcessManager().startServer();
-
     }
 
 }

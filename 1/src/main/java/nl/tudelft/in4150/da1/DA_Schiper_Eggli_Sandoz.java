@@ -12,30 +12,67 @@ import java.util.*;
 
 /**
  * Model of a process in a distributed system that can exchange messages
- * with other nodes. Ensures that the messages will be delivered in a casual order
+ * with other processes. Ensures that the messages will be delivered in a casual order
  * implemented with Schiper-Eggli-Sandoz algorithm.
  */
 public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
         implements DA_Schiper_Eggli_Sandoz_RMI, Runnable{
 
-    private static Log LOGGER = LogFactory.getLog(DA_Schiper_Eggli_Sandoz.class);
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 8830424175118488958L;
 
+	private static Log LOGGER = LogFactory.getLog(DA_Schiper_Eggli_Sandoz.class);
+
+    /**
+     * ORD_BUFF_S, stores timestamps of latest messages sent to other processes.
+     */
     private Map<Integer, List<Integer>> sendBuffer;
+
+    /**
+     * B, buffer of messages that cannot be delivered due to delays of previous messages
+     */
     private List<Message> pendingBuffer;
-    private Map<String, DA_Schiper_Eggli_Sandoz> cache;
+    
+    /**
+     * List to store all received messages for debugging purposes.
+     */
+    private List<Message> receivedMessages;
+
+    /**
+     * Cache to fasten lookup operations in remote registries
+     */
+    private Map<String, DA_Schiper_Eggli_Sandoz_RMI> processCache;
+
+    /**
+     * VT, local vector clock
+     */
     private List<Integer> clock;
-    private String id;
+
+    /**
+     * Index of a current process
+     */
     private int index;
+
+    /**
+     * Number of processes participating in message exchange
+     */
     private int numProcesses;
 
-    protected DA_Schiper_Eggli_Sandoz(int numProcesses, int index, String id) throws RemoteException {
+    /**
+     * Default constructor following RMI conventions
+     * @param numProcesses number of participating processes
+     * @param index index of current process
+     * @throws RemoteException if RMI mechanisms fail
+     */
+    protected DA_Schiper_Eggli_Sandoz(int numProcesses, int index) throws RemoteException {
         super();
-        cache = new HashMap<String, DA_Schiper_Eggli_Sandoz>();
+        processCache = new HashMap<String, DA_Schiper_Eggli_Sandoz_RMI>();
         sendBuffer = new HashMap<Integer, List<Integer>>();
         pendingBuffer = new LinkedList<Message>();
         
         this.index = index;
-        this.id = id;
         this.numProcesses = numProcesses;
         this.clock = new ArrayList<Integer>(numProcesses);
         for (int i = 0; i < numProcesses; i++){
@@ -43,21 +80,31 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
         }
     }
 
+    /**
+     * Multi-threading support
+     */
     public void run(){
         LOGGER.info("Process started");
     }
 
+    /** {@inheritDoc} */
     public synchronized void receive(Message message) throws RemoteException {
 
+        /*
+         * Artificial mechanism for message delays that allows to test algorithm correctness.
+         * If a {@link Message} has delay > 0, new thread starts that tries to resend it after
+         * delay number of ms. While this message is delayed, the process is able to receive
+         * other messages.
+         */
         if (message.getDelay() > 0){
             new Thread(new DelayedReceipt(this, message)).start();
             return;
         }
 
-        List<Message> delivered = new LinkedList<Message>();
-        
         if (isDeliveryAllowed(message)){
             deliver(message);
+
+            List<Message> delivered = new LinkedList<Message>();
             for (Message m : pendingBuffer){
                 if (isDeliveryAllowed(m)){
                     deliver(m);
@@ -72,24 +119,30 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
 
     }
 
+    /** {@inheritDoc} */
     public void send(String url, Message message){
-        clock.set(index, clock.get(index) + 1);
-        DA_Schiper_Eggli_Sandoz dest = getProcess(url);
+        increaseLocalClock();
+        DA_Schiper_Eggli_Sandoz_RMI dest = getProcess(url);
         message.setClock(clock);
         message.setSendBuffer(sendBuffer);
         try{
             dest.receive(message);
+            sendBuffer.put(dest.getIndex(), clock);
         } catch (RemoteException e){
             e.printStackTrace();
         }
-        sendBuffer.put(dest.getIndex(), clock);
     }
-    
-    private DA_Schiper_Eggli_Sandoz getProcess(String url){
-        DA_Schiper_Eggli_Sandoz result = cache.get(url);
+
+    /**
+     * Returns a process specified by its URL either from a local cache or RMI lookup.
+     * @param url process url
+     * @return process
+     */
+    private DA_Schiper_Eggli_Sandoz_RMI getProcess(String url){
+        DA_Schiper_Eggli_Sandoz_RMI result = processCache.get(url);
         if (result == null){
             try{
-                result = (DA_Schiper_Eggli_Sandoz)Naming.lookup(url);
+                result = (DA_Schiper_Eggli_Sandoz_RMI)Naming.lookup(url);
             } catch(RemoteException e1){
                 e1.printStackTrace();
             } catch (MalformedURLException e2){
@@ -97,13 +150,15 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
             } catch (NotBoundException e3){
                 e3.printStackTrace();
             }
-            cache.put(url, result);
+            processCache.put(url, result);
         }
         return result;
     }
 
+    /** {@inheritDoc} */
     private void deliver(Message message){
         processMessage(message);
+        increaseLocalClock();
 
         List<Map.Entry<Integer,List<Integer>>> messageBuffer = 
                 new ArrayList<Map.Entry<Integer, List<Integer>>>(message.getSendBuffer().entrySet());
@@ -118,11 +173,32 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
         }
     }
 
+    /**
+     * A simple action taken upon message delivery
+     * @param message delivered message
+     */
     private void processMessage(Message message){
         LOGGER.info("Received message " + message.getId() + " from process " + message.getSrcId() +
-                    " sent with delay " + message.getDelay() + " at " + System.currentTimeMillis());
+                    " at " + System.currentTimeMillis());
+        message.setTimestamp(System.currentTimeMillis());
+        receivedMessages.add(message);
     }
 
+    /**
+     * Updates local clock upon event occurrence.
+     */
+    private void increaseLocalClock(){
+        clock.set(index, clock.get(index) + 1);
+    }
+
+
+    /**
+     * Returns maximum of two vector clocks. Values with same indices are compared one-by-one,
+     * max is written to the result.
+     * @param clock1 first
+     * @param clock2 second
+     * @return maximum value
+     */
     private List<Integer> mergeClocks(List<Integer> clock1, List<Integer> clock2){
         List<Integer> maxClock = new ArrayList<Integer>(numProcesses);
         for (int i = 0; i < numProcesses; i++){
@@ -130,13 +206,24 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
         }
         return maxClock;
     }
-    
+
+    /**
+     * Checks whether current message can be delivered based on the accompanying vactor clock state.
+     * @param message message to test
+     * @return true if the message can be delivered right away, false if the delivery has to be postponed
+     * until other messages are delivered.
+     */
     private boolean isDeliveryAllowed(Message message){
+        
+        if (!sendBuffer.containsKey(message.getSrcId()) && !message.getSendBuffer().containsKey(index)){
+            return true;
+        }
+        
         boolean result = true;
-        List<Integer> clockCopy = new ArrayList<Integer>(clock);
-        clockCopy.set(index, clockCopy.get(index) + 1);
+        List<Integer> localClockCopy = new ArrayList<Integer>(clock);
+        localClockCopy.set(index, localClockCopy.get(index) + 1);
         for (int i = 0; i < numProcesses; i++){
-            if (clockCopy.get(i) < message.getClock().get(i)){
+            if (localClockCopy.get(i) > message.getClock().get(i)){
                 result = false;
                 break;
             }
@@ -144,19 +231,14 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
         return result;
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
+    /** {@inheritDoc} */
     public int getIndex() {
         return index;
     }
-
-    public void setIndex(int index) {
-        this.index = index;
+    
+    /** {@inheritDoc} */
+    public List<Message> getReceivedMessages()
+    {
+    	return this.receivedMessages;
     }
 }

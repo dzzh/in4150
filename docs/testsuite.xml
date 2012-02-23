@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<testsuite>
+	<testcase>
+		<id>1</id>
+		<event>
+			<delay>0</delay>
+			<from>1</from>
+			<to>2</to>
+		</event>
+		<event>
+			<delay>2</delay>
+			<from>2</from>
+			<to>3</to>
+		</event>
+		<event>
+			<delay>2</delay>
+			<from>1</from>
+			<to>3</to>
+		</event>
+	</testcase>
+</testsuite>
