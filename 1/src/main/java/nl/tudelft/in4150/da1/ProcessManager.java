@@ -6,6 +6,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.Naming;
@@ -28,7 +29,12 @@ public class ProcessManager {
         //read network configuration
         Configuration config = null;
         try{
-            config = new PropertiesConfiguration("network.cfg");
+            File configFile = new File("network.cfg");
+            if (configFile.exists()){
+                config = new PropertiesConfiguration("network.cfg");
+            } else {
+                config = new PropertiesConfiguration("network.cfg.default");
+            }
         } catch (ConfigurationException e) {
             e.printStackTrace();
         }
@@ -48,7 +54,7 @@ public class ProcessManager {
                     Naming.bind(url, process);
                 } else {
                     process = (DA_Schiper_Eggli_Sandoz_RMI)Naming.lookup(url);
-                    LOGGER.debug("Lookung up for process with URL " + url);
+                    LOGGER.debug("Looking up for process with URL " + url);
                 }
                 processIndex++;
                 processes.add(process);
