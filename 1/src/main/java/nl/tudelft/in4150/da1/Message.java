@@ -9,7 +9,11 @@ import java.util.Map;
  */
 public class Message implements Serializable {
 
-    int id = 0;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1752163046928173754L;
+	int id = 0;
     Map<Integer, List<Integer>> sendBuffer;
     List<Integer> clock;
 
@@ -21,6 +25,9 @@ public class Message implements Serializable {
 
     //if above 0, message receipt will be delayed for delay ms
     int delay = 0;
+    
+    //timestamp of message arrival.
+    private long timestamp;
 
     public Message(int id, int srcId, int destId) {
         this.id = id;
@@ -42,6 +49,14 @@ public class Message implements Serializable {
 
     public int getDelay() {
         return delay;
+    }
+    
+    public long getTimestamp() {
+        return timestamp;
+    }
+    
+    public void setTimestamp(long timestamp) {
+    	this.timestamp = timestamp;
     }
 
     public void setDelay(int delay) {

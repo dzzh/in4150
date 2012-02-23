@@ -2,6 +2,7 @@ package nl.tudelft.in4150.da1;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.List;
 
 /**
  * Remote interface to support RMI operations for Schiper-Eggli-Sandoz casual ordering
@@ -31,5 +32,12 @@ public interface DA_Schiper_Eggli_Sandoz_RMI extends Remote{
      * @throws RemoteException
      */
     public int getIndex() throws RemoteException;
+    
+    /**
+     * Messages so far received by the process.
+     * @return messages
+     * @throws RemoteException
+     */
+    public List<Message> getReceivedMessages() throws RemoteException;
 
 }

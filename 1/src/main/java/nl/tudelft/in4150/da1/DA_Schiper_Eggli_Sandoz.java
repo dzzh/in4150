@@ -18,7 +18,12 @@ import java.util.*;
 public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
         implements DA_Schiper_Eggli_Sandoz_RMI, Runnable{
 
-    private static Log LOGGER = LogFactory.getLog(DA_Schiper_Eggli_Sandoz.class);
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 8830424175118488958L;
+
+	private static Log LOGGER = LogFactory.getLog(DA_Schiper_Eggli_Sandoz.class);
 
     /**
      * ORD_BUFF_S, stores timestamps of latest messages sent to other processes.
@@ -29,6 +34,11 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
      * B, buffer of messages that cannot be delivered due to delays of previous messages
      */
     private List<Message> pendingBuffer;
+    
+    /**
+     * List to store all received messages for debugging purposes.
+     */
+    private List<Message> receivedMessages;
 
     /**
      * Cache to fasten lookup operations in remote registries
@@ -170,6 +180,8 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
     private void processMessage(Message message){
         LOGGER.info("Received message " + message.getId() + " from process " + message.getSrcId() +
                     " at " + System.currentTimeMillis());
+        message.setTimestamp(System.currentTimeMillis());
+        receivedMessages.add(message);
     }
 
     /**
@@ -223,5 +235,10 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
     public int getIndex() {
         return index;
     }
-
+    
+    /** {@inheritDoc} */
+    public List<Message> getReceivedMessages()
+    {
+    	return this.receivedMessages;
+    }
 }
