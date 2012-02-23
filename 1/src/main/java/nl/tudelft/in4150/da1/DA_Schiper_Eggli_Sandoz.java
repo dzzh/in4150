@@ -71,6 +71,7 @@ public class DA_Schiper_Eggli_Sandoz extends UnicastRemoteObject
         processCache = new HashMap<String, DA_Schiper_Eggli_Sandoz_RMI>();
         sendBuffer = new HashMap<Integer, List<Integer>>();
         pendingBuffer = new LinkedList<Message>();
+        receivedMessages = new ArrayList<Message>();
         
         this.index = index;
         this.numProcesses = numProcesses;

@@ -4,6 +4,9 @@ import nl.tudelft.in4150.da1.DA_Schiper_Eggli_Sandoz;
 import nl.tudelft.in4150.da1.DA_Schiper_Eggli_Sandoz_RMI;
 import nl.tudelft.in4150.da1.Message;
 import nl.tudelft.in4150.da1.TestSetup;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,6 +17,7 @@ import java.rmi.RemoteException;
 public class SimpleTest{
     
     private TestSetup setup;
+    private static Log LOGGER = LogFactory.getLog(DA_Schiper_Eggli_Sandoz.class);
     
     @Before
     public void init(){
@@ -33,7 +37,8 @@ public class SimpleTest{
             message = new Message(2, process1.getIndex(), process2.getIndex());
             process1.send(setup.getUrls()[process2.getIndex()],message);
                         
-            Assert.assertEquals(process2.getReceivedMessages().size(), 2);
+            Assert.assertTrue(process2.getReceivedMessages().size() == 2);
+            LOGGER.info("process2.getReceivedMessages().size(): " + process2.getReceivedMessages().size());
 
         } catch (RemoteException e){
             e.printStackTrace();
@@ -60,8 +65,8 @@ public class SimpleTest{
             message.setDelay(20);
             process1.send(setup.getUrls()[process3.getIndex()],message);
             
-            Assert.assertEquals(process2.getReceivedMessages().size(), 1);
-            Assert.assertEquals(process3.getReceivedMessages().size(), 2);
+            Assert.assertTrue(process2.getReceivedMessages().size() == 1);
+            Assert.assertTrue(process3.getReceivedMessages().size() == 2);
 
         } catch (RemoteException e){
             e.printStackTrace();
@@ -88,8 +93,8 @@ public class SimpleTest{
             message.setDelay(20);
             process2.send(setup.getUrls()[process3.getIndex()],message);
             
-            Assert.assertEquals(process2.getReceivedMessages().size(), 1);
-            Assert.assertEquals(process3.getReceivedMessages().size(), 2);
+            Assert.assertTrue(process2.getReceivedMessages().size() == 1);
+            Assert.assertTrue(process3.getReceivedMessages().size() == 2);
 
         } catch (RemoteException e){
             e.printStackTrace();
@@ -115,6 +120,9 @@ public class SimpleTest{
             message = new Message(3, process1.getIndex(), process3.getIndex());
             message.setDelay(20);
             process1.send(setup.getUrls()[process3.getIndex()],message);
+            
+            Assert.assertTrue(process2.getReceivedMessages().size() == 1);
+            Assert.assertTrue(process3.getReceivedMessages().size() == 2);
 
         } catch (RemoteException e){
             e.printStackTrace();
@@ -136,7 +144,9 @@ public class SimpleTest{
             message = new Message(2, process1.getIndex(), process2.getIndex());
             message.setDelay(0);
             process1.send(setup.getUrls()[process2.getIndex()],message);
-
+            
+            Assert.assertTrue(process2.getReceivedMessages().size() == 2);
+            
         } catch (RemoteException e){
             e.printStackTrace();
             Assert.fail();
@@ -162,6 +172,9 @@ public class SimpleTest{
             message = new Message(3, process2.getIndex(), process3.getIndex());
             message.setDelay(10);
             process2.send(setup.getUrls()[process3.getIndex()],message);
+            
+            Assert.assertTrue(process2.getReceivedMessages().size() == 2);
+            Assert.assertTrue(process3.getReceivedMessages().size() == 1);
 
         } catch (RemoteException e){
             e.printStackTrace();
