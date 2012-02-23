@@ -133,6 +133,9 @@ public class SimpleTest{
             message = new Message(3, process1.getIndex(), process3.getIndex());
             message.setDelay(20);
             process1.send(setup.getUrls()[process3.getIndex()],message);
+            
+//            Assert.assertTrue(process2.getReceivedMessages().size() == 1);
+//            Assert.assertTrue(process3.getReceivedMessages().size() == 2);
 
         } catch (RemoteException e){
             e.printStackTrace();
@@ -155,7 +158,9 @@ public class SimpleTest{
             message = new Message(2, process1.getIndex(), process2.getIndex());
             message.setDelay(0);
             process1.send(setup.getUrls()[process2.getIndex()],message);
-
+            
+            //Assert.assertTrue(process2.getReceivedMessages().size() == 2);
+            
         } catch (RemoteException e){
             e.printStackTrace();
             Assert.fail();
@@ -182,6 +187,9 @@ public class SimpleTest{
             message = new Message(3, process2.getIndex(), process3.getIndex());
             message.setDelay(10);
             process2.send(setup.getUrls()[process3.getIndex()],message);
+            
+//            Assert.assertTrue(process2.getReceivedMessages().size() == 2);
+//            Assert.assertTrue(process3.getReceivedMessages().size() == 1);
 
         } catch (RemoteException e){
             e.printStackTrace();
