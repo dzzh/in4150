@@ -1,4 +1,4 @@
-package nl.tudelft.in4150.da1;
+package nl.tudelft.in4150.da2;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;

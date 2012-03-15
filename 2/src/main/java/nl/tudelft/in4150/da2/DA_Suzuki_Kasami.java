@@ -1,4 +1,4 @@
-package nl.tudelft.in4150.da1;
+package nl.tudelft.in4150.da2;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,8 +49,8 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
     /**
      * Default constructor following RMI conventions
      *
-     * @param numProcesses number of participating processes
-     * @param index        index of current process
+     * @param urls URLs of participating processes
+     * @param index index of current process
      * @throws RemoteException if RMI mechanisms fail
      */
     protected DA_Suzuki_Kasami(String[] urls, int index) throws RemoteException {
@@ -76,15 +76,8 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
         for (int i = 0; i < numProcesses; i++) {
             sequenceNumbers.add(0);
         }
-        
-        if (index == 0)
-        {
-        	this.hasToken = true;
-        }
-        else
-        {
-        	this.hasToken = false;
-        }
+
+        this.hasToken = index == 0;
         
         this.inCriticalSection = false;
     }
@@ -119,7 +112,8 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
         case REQUEST:
             this.sequenceNumbers.set(message.getSrcId(), message.getSequenceNumbers().get(message.getSrcId()));
             
-            if (hasToken && !inCriticalSection && (sequenceNumbers.get(message.getSrcId()) > token.getSequenceNumbers().get(message.getSrcId())))
+            if (hasToken && !inCriticalSection &&
+                    (sequenceNumbers.get(message.getSrcId()) > token.getSequenceNumbers().get(message.getSrcId())))
             {
             	send(message.getSrcURL(), getToken());
             }
@@ -170,7 +164,7 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
             
             DA_Suzuki_Kasami_RMI dest = getProcess(url);       
 
-            // only the sequence number corresponding with the id of this message is actually interresting. 
+            // only the sequence number corresponding with the id of this message is interesting.
             message.setSequenceNumbers(sequenceNumbers);
             
             try {
@@ -215,18 +209,6 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
             processCache.put(url, result);
         }
         return result;
-    }
-
-    /**
-     * A simple action taken upon message delivery
-     *
-     * @param message delivered message
-     */
-    private void processMessage(Message message) {
-        LOGGER.info("Delivered message " + message.getId() + " from process " + message.getSrcId() +
-                " at " + System.currentTimeMillis());
-        message.setTimestamp(System.currentTimeMillis());
-        receivedMessages.add(message);
     }
 
     private void increaseSequenceNumber() {

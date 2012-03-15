@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>DA-1</groupId>
-    <artifactId>DA-1</artifactId>
+    <groupId>DA-2</groupId>
+    <artifactId>DA-2</artifactId>
     <version>1.0</version>
 
     <dependencies>
@@ -49,8 +49,8 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>nl.tudelft.in4150.da1.DA_Schiper_Eggli_Sandoz_Main</mainClass>
-                            <packageName>nl.tudelft.in4150.da1</packageName>
+                            <mainClass>nl.tudelft.in4150.da2.DA_Suzuki_Kasami_Main</mainClass>
+                            <packageName>nl.tudelft.in4150.da2</packageName>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
                         </manifest>

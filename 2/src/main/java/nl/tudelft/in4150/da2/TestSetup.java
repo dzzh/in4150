@@ -1,4 +1,4 @@
-package nl.tudelft.in4150.da1;
+package nl.tudelft.in4150.da2;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
@@ -31,6 +31,7 @@ public class TestSetup {
             e.printStackTrace();
         }
 
+        assert config != null;
         urls = config.getStringArray("node.url");
         processes = new ArrayList<DA_Suzuki_Kasami_RMI>();
 

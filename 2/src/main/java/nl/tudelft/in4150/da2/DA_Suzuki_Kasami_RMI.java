@@ -1,4 +1,4 @@
-package nl.tudelft.in4150.da1;
+package nl.tudelft.in4150.da2;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

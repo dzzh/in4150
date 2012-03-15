@@ -1,13 +1,12 @@
-package nl.tudelft.in4150.da1.test;
+package nl.tudelft.in4150.da2.test;
 
-import nl.tudelft.in4150.da1.DA_Suzuki_Kasami_RMI;
-import nl.tudelft.in4150.da1.Message;
-import nl.tudelft.in4150.da1.TestSetup;
+import nl.tudelft.in4150.da2.DA_Suzuki_Kasami_RMI;
+import nl.tudelft.in4150.da2.Message;
+import nl.tudelft.in4150.da2.TestSetup;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 
@@ -38,10 +37,10 @@ public class SimpleTest{
         try{
             Message message1 = new Message(1, Message.Type.REQUEST, setup.getUrls()[process1.getIndex()], process1.getIndex(), process2.getIndex());
             message1.setDelay(10);
-            process1.send(setup.getUrls()[process2.getIndex()],message1);
+            //process1.send(setup.getUrls()[process2.getIndex()],message1);
 
             Message message2 = new Message(2, Message.Type.REQUEST, setup.getUrls()[process1.getIndex()], process1.getIndex(), process2.getIndex());
-            process1.send(setup.getUrls()[process2.getIndex()],message2);
+            //process1.send(setup.getUrls()[process2.getIndex()],message2);
 
             // Sleep atleast the sum of all delays to be sure all messages have arrived.
             Thread.sleep(20);
