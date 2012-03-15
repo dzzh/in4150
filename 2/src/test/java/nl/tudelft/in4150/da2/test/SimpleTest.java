@@ -1,17 +1,16 @@
 package nl.tudelft.in4150.da2.test;
 
 import nl.tudelft.in4150.da2.DA_Suzuki_Kasami_RMI;
-import nl.tudelft.in4150.da2.message.Message;
+import nl.tudelft.in4150.da2.Token;
 import nl.tudelft.in4150.da2.TestSetup;
+import nl.tudelft.in4150.da2.message.TokenMessage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-
 import java.rmi.RemoteException;
-import java.util.List;
 
 public class SimpleTest{
     
@@ -26,37 +25,25 @@ public class SimpleTest{
     }
     
     @Test
-    //@Ignore
-    /**
-     * P1 sends m1 to P2
-     * P1 sends m2 to P2 but m2 arrives before m1
-     */
     public void testCase1(){
         DA_Suzuki_Kasami_RMI process1 = setup.getProcesses().get(0);
+        TestThread thread1 = new TestThread(process1);
         DA_Suzuki_Kasami_RMI process2 = setup.getProcesses().get(1);
+        TestThread thread2 = new TestThread(process2);
+        DA_Suzuki_Kasami_RMI process3 = setup.getProcesses().get(2);
+        TestThread thread3 = new TestThread(process3);
+
         try{
-            Message message1 = new Message(1, Message.Type.REQUEST, setup.getUrls()[process1.getIndex()], process1.getIndex(), process2.getIndex());
-            message1.setDelay(10);
-            //process1.send(setup.getUrls()[process2.getIndex()],message1);
-
-            Message message2 = new Message(2, Message.Type.REQUEST, setup.getUrls()[process1.getIndex()], process1.getIndex(), process2.getIndex());
-            //process1.send(setup.getUrls()[process2.getIndex()],message2);
-
-            // Sleep atleast the sum of all delays to be sure all messages have arrived.
-            Thread.sleep(20);
-
-            List<Message> messages = null;
-            Assert.assertTrue(2 == messages.size());
-            Assert.assertTrue(message1.getId() == messages.get(0).getId());
-            Assert.assertTrue(message2.getId() == messages.get(1).getId());
-
+            Token token = Token.instantiate(3);
+            TokenMessage tm = new TokenMessage("",0,token);
+            new Thread(thread1).start();
+            process1.receiveToken(tm);
+            new Thread(thread2).start();
+            new Thread(thread3).start();
+            
         } catch (RemoteException e){
             e.printStackTrace();
             Assert.fail();
-        } catch (InterruptedException e){
-            e.printStackTrace();
-            Assert.fail();
         }
-
     }    
 }

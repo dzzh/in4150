@@ -52,7 +52,7 @@ public class ProcessManager {
         //bind local processes and locate remote ones
 
         try {
-            DA_Schiper_Eggli_Sandoz_RMI process = null;
+            DA_Schiper_Eggli_Sandoz_RMI process;
             int processIndex = 0;
             for (String url : urls) {
                 if (isProcessLocal(url)) {

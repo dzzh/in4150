@@ -1,13 +1,13 @@
 package nl.tudelft.in4150.da2;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Token {
+public class Token implements Serializable {
 
     List<Integer> TN;
-    private Token instance = null;
-    boolean isInstantiated = false;
+    private static boolean isInstantiated = false;
 
     /**
      * The constructor is made private as Token is a singleton created only once for the whole system.
@@ -25,21 +25,15 @@ public class Token {
      * Instantiates token if executes for the first time
      * @return token after first execution, null otherwise
      */
-    public Token instantiate(int numProcesses){
+    public static Token instantiate(int numProcesses){
         if (!isInstantiated){
-            instance = new Token(numProcesses);
             isInstantiated = true;
-            return instance;
+            return new Token(numProcesses);
         }
-
         return null;
     }
 
     public List<Integer> getTN() {
         return TN;
-    }
-
-    public void setTN(List<Integer> TN) {
-        this.TN = TN;
     }
 }
