@@ -6,43 +6,31 @@ import java.io.Serializable;
  * Abstract class providing general functionality of a message to be exchanged by (remote) processes.
  */
 public abstract class Message implements Serializable {
-	
-	// message id.
-	private int id;
 
-    private String srcURL;
-
+    //URL of source process
+    private String srcUrl;
+    
     //id of source process
     private int srcId;
 
-    //id of destination process
-    private int destId;
-
-    public Message(int id, String srcURL, int srcId, int destId) {
-        this.id = id;
-        this.srcURL = srcURL;
+    public Message(String srcUrl, int srcId) {
+        this.srcUrl = srcUrl;
         this.srcId = srcId;
-        this.destId = destId;
     }
 
-    public String getSrcURL(){
-    	return this.srcURL;
-    }
-    
     public int getSrcId() {
         return srcId;
     }
 
-    public int getId() {
-        return id;
+    public String getSrcUrl() {
+        return srcUrl;
     }
 
     @Override
     public String toString() {
         return "Message{" +
-                "id=" + id +
+                "srcUrl='" + srcUrl + '\'' +
                 ", srcId=" + srcId +
-                ", destId=" + destId +
                 '}';
     }
 }

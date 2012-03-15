@@ -1,6 +1,7 @@
 package nl.tudelft.in4150.da2;
 
-import nl.tudelft.in4150.da2.message.Message;
+import nl.tudelft.in4150.da2.message.RequestMessage;
+import nl.tudelft.in4150.da2.message.TokenMessage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -11,12 +12,23 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 
-
+/**
+ * Implementation of Suzuki-Kasami mutual exclusion algorithm
+ */
 public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_Kasami_RMI, Runnable {
 
 	private static final long serialVersionUID = 2526720373028386278L;
 	private static Log LOGGER = LogFactory.getLog(DA_Suzuki_Kasami.class);
-    private static final int MAX_DELAY = 1000;
+
+    /**
+     * Maximum delay simulating a computation unit within {@link #compute()} method and a critical section.
+     */
+    private static final int MAX_COMPUTATION_DELAY = 1000;
+
+    /**
+     * A delay between checks of token acquisition.
+     */
+    private static final int TOKEN_WAIT_DELAY = 10;
     
     /**
      * Cache to fasten lookup operations in remote registries
@@ -24,7 +36,7 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
     private Map<String, DA_Suzuki_Kasami_RMI> processCache;
 
 	// for every process the sequence number of the last request this process knows about.
-    private List<Integer> sequenceNumbers;
+    private List<Integer> N;
     
     /**
      * Index of a current process
@@ -40,6 +52,9 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
      * URLs of processes in a system
      */
     private String[] urls;
+    
+    private Token token = null;
+    private boolean inCriticalSection = false;
 
     /**
      * Needs to simulate random delays while doing computations
@@ -62,18 +77,43 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
         this.numProcesses = urls.length;
         
         reset();
-
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void reset(){
 
-        this.sequenceNumbers = new ArrayList<Integer>(numProcesses);
+        this.N = new ArrayList<Integer>(numProcesses);
         for (int i = 0; i < numProcesses; i++) {
-            sequenceNumbers.add(0);
+            N.add(0);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void compute() throws RemoteException {
+        long t1 = System.currentTimeMillis();
+        LOGGER.info("Process " + index + " starts computations.");
+        try{
+            Thread.sleep(random.nextInt(MAX_COMPUTATION_DELAY));
+        } catch(InterruptedException e){
+            throw new RuntimeException(e);
+        }
+
+        criticalSectionWrapper();
+
+        try{
+            Thread.sleep(random.nextInt(MAX_COMPUTATION_DELAY));
+        } catch(InterruptedException e){
+            throw new RuntimeException(e);
+        }
+
+        long t2 = System.currentTimeMillis();
+        LOGGER.info("Process " + index + " ends computations which lasted for " + (t2-t1) + " ms.");
     }
 
     /**
@@ -86,75 +126,104 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
     /**
      * {@inheritDoc}
      */
-    public synchronized void receive(Message message) throws RemoteException {
+    @Override
+    public void receiveRequest(RequestMessage rm){
+        N.set(rm.getSrcId(), rm.getSequence());
 
-        LOGGER.debug("Received message " + message.getId());
+        if (!inCriticalSection && token != null && (N.get(rm.getSrcId()) > token.getTN().get(rm.getSrcId())))
+        {
+            sendToken(rm.getSrcUrl());
+        }    
+    }
 
-        switch(message.getType()) {
-        case REQUEST:
-            this.sequenceNumbers.set(message.getSrcId(), message.getSequenceNumbers().get(message.getSrcId()));
-            
-            if (hasToken && !inCriticalSection &&
-                    (sequenceNumbers.get(message.getSrcId()) > token.getSequenceNumbers().get(message.getSrcId())))
-            {
-            	send(message.getSrcURL(), getToken());
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getIndex() {
+        return index;
+    }
+
+    /**
+     * Broadcasts REQUEST message to all the processes
+     */
+    private void broadcastRequest()
+    {
+        int i = 0;
+        for (String url : urls){
+            DA_Suzuki_Kasami_RMI dest = getProcess(url);
+            try{
+                int sequence = N.get(i) + 1;
+                RequestMessage rm = new RequestMessage(urls[index], index, sequence);
+                dest.receiveRequest(rm);
+            } catch (RemoteException e){
+                throw new RuntimeException(e);
             }
-            
-        	break;
-        	
-        case TOKEN:
-        	this.setToken(message);
-        	
-        	/* enter critical section. */
-        	
-        	token.getSequenceNumbers().set(index, sequenceNumbers.get(index)); // pointer ???
-        
-        	for (int j = index + 1; j < numProcesses && hasToken; j++)
-        	{
-        		if(sequenceNumbers.get(j) > token.getSequenceNumbers().get(j))
-        		{
-        			send(urls[j], getToken());
-        			break;
-        		}
-        	}
-        	
-        	for (int j = 1; j < index - 1 && hasToken; j++)
-        	{
-        		if(sequenceNumbers.get(j) > token.getSequenceNumbers().get(j))
-        		{
-        			send(urls[j], getToken());
-        			break;
-        		}
-        	}
-        	
-        	break;
-        	
-        default:
-        	// do something clever.
-        	break;        
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void receiveToken(TokenMessage tm){
+        token = tm.getToken();
+
+        waitForCriticalSectionToStop();
+
+        token.getTN().set(index, N.get(index));
+
+        for (int j = index + 1; j < numProcesses && token != null; j++)
+        {
+            if(N.get(j) > token.getTN().get(j))
+            {
+                sendToken(urls[j]);
+                break;
+            }
+        }
+
+        for (int j = 1; j < index - 1 && token != null; j++)
+        {
+            if(N.get(j) > token.getTN().get(j))
+            {
+                sendToken(urls[j]);
+                break;
+            }
+        }
+    }
+
+    /**
+     * Piece of computations requiring mutual exclusion
+     */
+    private void criticalSection(){
+        inCriticalSection = true;
+        int delay = random.nextInt(MAX_COMPUTATION_DELAY);
+        LOGGER.info("Process " + index + " enters critical section and will compute for " + delay + " ms.");
+
+        try{
+            Thread.sleep(delay);
+        } catch(InterruptedException e){
+            throw new RuntimeException(e);
+        }
+
+        LOGGER.info("Process " + index + " leaves critical section.");
+        inCriticalSection = false;
+    }
+
+    /**
+     * Sends token to (remote) process
+     * @param url URL of a (remote) process to send token
+     */
+    private void sendToken(String url){
+        assert token != null;
+        DA_Suzuki_Kasami_RMI dest = getProcess(url);
+        try{
+            TokenMessage tm = new TokenMessage(urls[index], index, token);
+            dest.receiveToken(tm);
+            token = null;
+        } catch (RemoteException e){
+            throw new RuntimeException(e);
         }
         
-
-
-    }
-    
-    public void broadcast(Message message)
-    {
-    	increaseSequenceNumber();
-    	
-    	for (String url : urls){
-            
-            DA_Suzuki_Kasami_RMI dest = getProcess(url);       
-
-            // only the sequence number corresponding with the id of this message is interesting.
-            message.setSequenceNumbers(sequenceNumbers);
-            
-            try {
-                dest.receive(message);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-    	}
     }
 
     /**
@@ -181,48 +250,59 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
     }
 
     /**
-     * {@inheritDoc}
+     * Invokes {@link #criticalSection()} with all necessary pre- and post- actions according to algorithm
      */
-    public int getIndex() {
-        return index;
+    private void criticalSectionWrapper(){
+        
+        broadcastRequest();
+        waitForToken();
+        
+        criticalSection();
+        
+        
     }
 
     /**
-     * Performs computations that require critical section access.
-     * @throws RemoteException
+     * Puts process into sleeping state until token is acquired
      */
-	@Override
-	public void compute() throws RemoteException {
-        long t1 = System.currentTimeMillis();
-		LOGGER.info("Process " + index + " starts computations.");
-        try{
-            Thread.sleep(random.nextInt(MAX_DELAY));
-        } catch(InterruptedException e){
-            throw new RuntimeException(e);
+    private void waitForToken(){
+        while (token == null){
+            try{
+                Thread.sleep(TOKEN_WAIT_DELAY);
+            } catch (InterruptedException e){
+                throw new RuntimeException(e);
+            }
         }
+    }
+
+    /**
+     * Puts process into sleeping state until critical section is done
+     */
+    private void waitForCriticalSectionToStop(){
         
-        computeInsideCriticalSection();
-
+        //wait for critical section to start working
         try{
-            Thread.sleep(random.nextInt(MAX_DELAY));
-        } catch(InterruptedException e){
+            Thread.sleep(TOKEN_WAIT_DELAY);
+        } catch (InterruptedException e){
             throw new RuntimeException(e);
         }
 
-        long t2 = System.currentTimeMillis();
-        LOGGER.info("Process " + index + " ends computations which lasted for " + (t2-t1) + " ms.");
-	}
-    
-    private void computeInsideCriticalSection(){
-        int delay = random.nextInt(MAX_DELAY);
-        LOGGER.info("Process " + index + " enters critical section and will compute for " + delay + " ms.");
-
-        try{
-            Thread.sleep(delay);
-        } catch(InterruptedException e){
-            throw new RuntimeException(e);
+        //sleep until critical section is done
+        while (inCriticalSection){
+            try{
+                Thread.sleep(TOKEN_WAIT_DELAY);
+            } catch (InterruptedException e){
+                throw new RuntimeException(e);
+            }
         }
-        
-        LOGGER.info("Process " + index + " leaves critical section.");
+    }
+
+    @Override
+    public String toString() {
+        return "DA_Suzuki_Kasami{" +
+                "index=" + index +
+                ", N=" + N +
+                '}';
     }
 }
+

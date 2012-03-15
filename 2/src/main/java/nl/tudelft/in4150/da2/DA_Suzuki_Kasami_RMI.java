@@ -1,24 +1,16 @@
 package nl.tudelft.in4150.da2;
 
-import nl.tudelft.in4150.da2.message.Message;
+import nl.tudelft.in4150.da2.message.RequestMessage;
+import nl.tudelft.in4150.da2.message.TokenMessage;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 /**
- * Remote interface to support RMI operations for Schiper-Eggli-Sandoz casual ordering
- * in a dstributed system.
+ * Remote interface to support RMI operations for Suzuki-Kasami mutual exclusion algorithm.
  */
 public interface DA_Suzuki_Kasami_RMI extends Remote{
 
-    /**
-     * Sends a message to the (remote) destination process
-     * @param url location of destination process
-     * @param message message to send
-     * @throws RemoteException
-     */
-    //public void send(String url, Message message) throws RemoteException;
-	
 	/**
 	 * Does computations requiring access to the CS.
 	 */
@@ -26,12 +18,17 @@ public interface DA_Suzuki_Kasami_RMI extends Remote{
     
     /**
      * Receives request message from a (remote) process.
-     * @param message transmitted message
+     * @param requestMessage transmitted message
      * @throws RemoteException
      */
-    public void receiveRequest(Message message) throws RemoteException;
+    public void receiveRequest(RequestMessage requestMessage) throws RemoteException;
 
-    public void receiveToken(Message message) throws RemoteException;
+    /**
+     * Receives token from a (remote) process
+     * @param tokenMessage message with token
+     * @throws RemoteException
+     */
+    public void receiveToken(TokenMessage tokenMessage) throws RemoteException;
     
     /**
      * Index of a current process

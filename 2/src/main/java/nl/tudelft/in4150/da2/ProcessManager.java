@@ -14,6 +14,7 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ProcessManager {
 
@@ -86,6 +87,10 @@ public class ProcessManager {
         return url.startsWith(RMI_PREFIX + inetAddress.getHostAddress()) ||
                url.startsWith(RMI_PREFIX + "localhost") ||
                url.startsWith(RMI_PREFIX + "127.0.0.1");
+    }
+
+    public List<DA_Suzuki_Kasami_RMI> getProcesses(){
+        return processes;
     }
 
 }
