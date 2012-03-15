@@ -16,21 +16,22 @@ import java.util.ArrayList;
 public class ProcessManager {
 
     private static final Log LOGGER = LogFactory.getLog(ProcessManager.class);
-    
-    private static final String RMI_PREFIX ="rmi://";
+
+    private static final String RMI_PREFIX = "rmi://";
     private ArrayList<DA_Schiper_Eggli_Sandoz_RMI> processes;
+    private static final int INSTANTIATION_DELAY = 1000;
 
     /**
      * Launches server instance
      */
-    public void startServer(){
+    public void startServer() {
 
         //read network configuration
         Configuration config = null;
-        try{
+        try {
             config = new PropertiesConfiguration("network.cfg");
         } catch (ConfigurationException e) {
-            try{
+            try {
                 config = new PropertiesConfiguration("network.cfg.default");
             } catch (ConfigurationException e2) {
                 e2.printStackTrace();
@@ -41,37 +42,53 @@ public class ProcessManager {
         processes = new ArrayList<DA_Schiper_Eggli_Sandoz_RMI>();
 
         //bind local processes and locate remote ones
-        int processIndex = 0;
-        for (String url : urls){
-            try{
-                DA_Schiper_Eggli_Sandoz_RMI process;
-                if (isProcessLocal(url)){
+
+        try {
+            DA_Schiper_Eggli_Sandoz_RMI process = null;
+            int processIndex = 0;
+            for (String url : urls) {
+                if (isProcessLocal(url)) {
                     process = new DA_Schiper_Eggli_Sandoz(urls.length, processIndex);
                     LOGGER.debug("Process " + processIndex + " is local.");
-                    new Thread((DA_Schiper_Eggli_Sandoz)process).start();
+                    new Thread((DA_Schiper_Eggli_Sandoz) process).start();
                     Naming.bind(url, process);
-                } else {
-                    process = (DA_Schiper_Eggli_Sandoz_RMI)Naming.lookup(url);
-                    LOGGER.debug("Looking up for process with URL " + url);
-                }
+                    processes.add(process);
+                } 
                 processIndex++;
-                processes.add(process);
-                
-            } catch (RemoteException e1){
-                e1.printStackTrace();
-            } catch (AlreadyBoundException e2){
-                e2.printStackTrace();
-            } catch (NotBoundException e3){
-                e3.printStackTrace();
-            } catch (MalformedURLException e4){
-                e4.printStackTrace();
+
+
+            }
+
+            //sleep is needed to instantiate local processes at all machines
+           LOGGER.debug("Waiting for remote processes to instantiate...");
+            try{
+                Thread.sleep(INSTANTIATION_DELAY);
+            } catch(InterruptedException e){
+                throw new RuntimeException(e);
+            }
+            LOGGER.debug("And looking them up.");
+            
+            for (String url : urls){
+                if (!isProcessLocal(url)) {
+                    process = (DA_Schiper_Eggli_Sandoz_RMI) Naming.lookup(url);
+                    LOGGER.debug("Found remote process with URL " + url);
+                    processes.add(process);
+                }
             }
             
+        } catch (RemoteException e1) {
+            e1.printStackTrace();
+        } catch (AlreadyBoundException e2) {
+            e2.printStackTrace();
+        } catch (NotBoundException e3) {
+            e3.printStackTrace();
+        } catch (MalformedURLException e4) {
+            e4.printStackTrace();
         }
     }
 
-    private boolean isProcessLocal(String url){
+    private boolean isProcessLocal(String url) {
         return url.startsWith(RMI_PREFIX + "localhost");
     }
-    
+
 }

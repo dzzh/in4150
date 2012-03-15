@@ -1,5 +1,6 @@
 package nl.tudelft.in4150.da2;
 
+import nl.tudelft.in4150.da2.message.Message;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -14,12 +15,9 @@ import java.util.*;
 public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_Kasami_RMI, Runnable {
 
 	private static final long serialVersionUID = 2526720373028386278L;
-
 	private static Log LOGGER = LogFactory.getLog(DA_Suzuki_Kasami.class);
-
-	// all received messeges.
-    private LinkedList<Message> receivedMessages;
-
+    private static final int MAX_DELAY = 1000;
+    
     /**
      * Cache to fasten lookup operations in remote registries
      */
@@ -28,8 +26,6 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
 	// for every process the sequence number of the last request this process knows about.
     private List<Integer> sequenceNumbers;
     
-    private Message token;
-
     /**
      * Index of a current process
      */
@@ -40,11 +36,15 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
      */
     private int numProcesses;
 
+    /**
+     * URLs of processes in a system
+     */
     private String[] urls;
-    
-    private boolean hasToken; 
-    
-    private boolean inCriticalSection;
+
+    /**
+     * Needs to simulate random delays while doing computations
+     */
+    private Random random = new Random();
     
     /**
      * Default constructor following RMI conventions
@@ -70,16 +70,10 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
      */
     public void reset(){
 
-        receivedMessages = new LinkedList<Message>();
-
         this.sequenceNumbers = new ArrayList<Integer>(numProcesses);
         for (int i = 0; i < numProcesses; i++) {
             sequenceNumbers.add(0);
         }
-
-        this.hasToken = index == 0;
-        
-        this.inCriticalSection = false;
     }
 
     /**
@@ -94,20 +88,8 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
      */
     public synchronized void receive(Message message) throws RemoteException {
 
-        /*
-         * Artificial mechanism for message delays that allows to test algorithm correctness.
-         * If a {@link Message} has delay > 0, new thread starts that tries to resend it after
-         * delay number of ms. While this message is delayed, the process is able to receive
-         * other messages.
-         */
-        if (message.getDelay() > 0) {
-            new Thread(new DelayedReceipt(this, message)).start();
-            return;
-        }
-
         LOGGER.debug("Received message " + message.getId());
-        
-        
+
         switch(message.getType()) {
         case REQUEST:
             this.sequenceNumbers.set(message.getSrcId(), message.getSequenceNumbers().get(message.getSrcId()));
@@ -176,19 +158,6 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public void send(String url, Message token) {
-        DA_Suzuki_Kasami_RMI dest = getProcess(url);       
-        
-        try {
-            dest.receive(token);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
      * Returns a process specified by its URL either from a local cache or RMI lookup.
      *
      * @param url process url
@@ -200,19 +169,15 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
             try {
                 result = (DA_Suzuki_Kasami_RMI) Naming.lookup(url);
             } catch (RemoteException e1) {
-                e1.printStackTrace();
+                throw new RuntimeException(e1);
             } catch (MalformedURLException e2) {
-                e2.printStackTrace();
+                throw new RuntimeException(e2);
             } catch (NotBoundException e3) {
-                e3.printStackTrace();
+                throw new RuntimeException(e3);
             }
             processCache.put(url, result);
         }
         return result;
-    }
-
-    private void increaseSequenceNumber() {
-        sequenceNumbers.set(index, sequenceNumbers.get(index) + 1);
     }
 
     /**
@@ -221,29 +186,43 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
     public int getIndex() {
         return index;
     }
-    
-    public void setToken(Message token)
-    {
-    	this.token = token;
-    	this.hasToken = true;
-    }
-    
-    public Message getToken()
-    {
-    	Message token = this.token;
-    	this.token = null;
-    	this.hasToken = false;
-    	return token;
-    }
 
-    @Override
-    public LinkedList<Message> getMessages() throws RemoteException {
-        return receivedMessages;
-    }
-
+    /**
+     * Performs computations that require critical section access.
+     * @throws RemoteException
+     */
 	@Override
-	public void accessCS(int processIndex) throws RemoteException {
-		// Test if the critical sections is already taken.
-		
+	public void compute() throws RemoteException {
+        long t1 = System.currentTimeMillis();
+		LOGGER.info("Process " + index + " starts computations.");
+        try{
+            Thread.sleep(random.nextInt(MAX_DELAY));
+        } catch(InterruptedException e){
+            throw new RuntimeException(e);
+        }
+        
+        computeInsideCriticalSection();
+
+        try{
+            Thread.sleep(random.nextInt(MAX_DELAY));
+        } catch(InterruptedException e){
+            throw new RuntimeException(e);
+        }
+
+        long t2 = System.currentTimeMillis();
+        LOGGER.info("Process " + index + " ends computations which lasted for " + (t2-t1) + " ms.");
 	}
+    
+    private void computeInsideCriticalSection(){
+        int delay = random.nextInt(MAX_DELAY);
+        LOGGER.info("Process " + index + " enters critical section and will compute for " + delay + " ms.");
+
+        try{
+            Thread.sleep(delay);
+        } catch(InterruptedException e){
+            throw new RuntimeException(e);
+        }
+        
+        LOGGER.info("Process " + index + " leaves critical section.");
+    }
 }

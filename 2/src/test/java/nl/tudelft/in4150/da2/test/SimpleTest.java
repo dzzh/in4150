@@ -1,7 +1,7 @@
 package nl.tudelft.in4150.da2.test;
 
 import nl.tudelft.in4150.da2.DA_Suzuki_Kasami_RMI;
-import nl.tudelft.in4150.da2.Message;
+import nl.tudelft.in4150.da2.message.Message;
 import nl.tudelft.in4150.da2.TestSetup;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,7 +45,7 @@ public class SimpleTest{
             // Sleep atleast the sum of all delays to be sure all messages have arrived.
             Thread.sleep(20);
 
-            List<Message> messages = process2.getMessages();
+            List<Message> messages = null;
             Assert.assertTrue(2 == messages.size());
             Assert.assertTrue(message1.getId() == messages.get(0).getId());
             Assert.assertTrue(message2.getId() == messages.get(1).getId());

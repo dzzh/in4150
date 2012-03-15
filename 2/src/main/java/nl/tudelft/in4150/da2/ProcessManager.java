@@ -6,7 +6,9 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.UnknownHostException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
@@ -19,6 +21,7 @@ public class ProcessManager {
     
     private static final String RMI_PREFIX ="rmi://";
     private ArrayList<DA_Suzuki_Kasami_RMI> processes;
+    private InetAddress inetAddress;
 
     /**
      * Launches server instance
@@ -26,15 +29,24 @@ public class ProcessManager {
     public void startServer(){
 
         //read network configuration
-        Configuration config = null;
+        Configuration config;
         try{
             config = new PropertiesConfiguration("network.cfg");
         } catch (ConfigurationException e) {
             try{
                 config = new PropertiesConfiguration("network.cfg.default");
             } catch (ConfigurationException e2) {
-                e2.printStackTrace();
+                LOGGER.error("Cannot read network configuration");
+                throw new RuntimeException(e2);
             }
+        }
+
+        //instantiating InetAddress to resolve local IP
+        try{
+            inetAddress = InetAddress.getLocalHost();
+        } catch (UnknownHostException e){
+            LOGGER.error("Cannot instantiate IP resolver");
+            throw new RuntimeException(e);
         }
 
         String[] urls = config.getStringArray("node.url");
@@ -58,20 +70,22 @@ public class ProcessManager {
                 processes.add(process);
                 
             } catch (RemoteException e1){
-                e1.printStackTrace();
+                throw new RuntimeException(e1);
             } catch (AlreadyBoundException e2){
-                e2.printStackTrace();
+                throw new RuntimeException(e2);
             } catch (NotBoundException e3){
-                e3.printStackTrace();
+                throw new RuntimeException(e3);
             } catch (MalformedURLException e4){
-                e4.printStackTrace();
+                throw new RuntimeException(e4);
             }
             
         }
     }
 
     private boolean isProcessLocal(String url){
-        return url.startsWith(RMI_PREFIX + "localhost");
+        return url.startsWith(RMI_PREFIX + inetAddress.getHostAddress()) ||
+               url.startsWith(RMI_PREFIX + "localhost") ||
+               url.startsWith(RMI_PREFIX + "127.0.0.1");
     }
-    
+
 }
