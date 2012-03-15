@@ -1,4 +1,6 @@
 .DS_Store
 1/.idea/*
+2/.idea/*
 *.iml
 network.cfg
+target/*
