@@ -6,7 +6,9 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.UnknownHostException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
@@ -19,7 +21,8 @@ public class ProcessManager {
 
     private static final String RMI_PREFIX = "rmi://";
     private ArrayList<DA_Schiper_Eggli_Sandoz_RMI> processes;
-    private static final int INSTANTIATION_DELAY = 1000;
+    private InetAddress inetAddress;
+    private static final int INSTANTIATION_DELAY = 5000;
 
     /**
      * Launches server instance
@@ -38,6 +41,15 @@ public class ProcessManager {
             }
         }
 
+        //instantiating InetAddress to resolve local IP
+        try{
+            inetAddress = InetAddress.getLocalHost();
+        } catch (UnknownHostException e){
+            LOGGER.error("Cannot instantiate IP resolver");
+            throw new RuntimeException(e);
+        }
+
+        assert config != null;
         String[] urls = config.getStringArray("node.url");
         processes = new ArrayList<DA_Schiper_Eggli_Sandoz_RMI>();
 
@@ -87,8 +99,10 @@ public class ProcessManager {
         }
     }
 
-    private boolean isProcessLocal(String url) {
-        return url.startsWith(RMI_PREFIX + "localhost");
+    private boolean isProcessLocal(String url){
+        return url.startsWith(RMI_PREFIX + inetAddress.getHostAddress()) ||
+                url.startsWith(RMI_PREFIX + "localhost") ||
+                url.startsWith(RMI_PREFIX + "127.0.0.1");
     }
 
 }
