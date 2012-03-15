@@ -6,22 +6,26 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.net.InetAddress;
+import java.net.InterfaceAddress;
 import java.net.MalformedURLException;
-import java.net.UnknownHostException;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 
 public class ProcessManager {
 
     private static final Log LOGGER = LogFactory.getLog(ProcessManager.class);
 
     private static final String RMI_PREFIX = "rmi://";
+	short ipNetworkPrefixLength = 22;
+	
     private ArrayList<DA_Schiper_Eggli_Sandoz_RMI> processes;
-    private InetAddress inetAddress;
+    private Enumeration<NetworkInterface> networkInterfaces;
     private static final int INSTANTIATION_DELAY = 5000;
 
     /**
@@ -39,14 +43,6 @@ public class ProcessManager {
             } catch (ConfigurationException e2) {
                 e2.printStackTrace();
             }
-        }
-
-        //instantiating InetAddress to resolve local IP
-        try{
-            inetAddress = InetAddress.getLocalHost();
-        } catch (UnknownHostException e){
-            LOGGER.error("Cannot instantiate IP resolver");
-            throw new RuntimeException(e);
         }
 
         assert config != null;
@@ -99,10 +95,49 @@ public class ProcessManager {
         }
     }
 
-    private boolean isProcessLocal(String url){
-        return url.startsWith(RMI_PREFIX + inetAddress.getHostAddress()) ||
-                url.startsWith(RMI_PREFIX + "localhost") ||
-                url.startsWith(RMI_PREFIX + "127.0.0.1");
+    private boolean isProcessLocal(String url){    	
+    	boolean isLocal = false;
+    	
+    	for (String ipAddress: this.getIpAddresses()){
+    		isLocal = isLocal || url.startsWith(RMI_PREFIX + ipAddress);
+    	}
+    	
+    	// special cases.
+    	isLocal = isLocal || url.startsWith(RMI_PREFIX + "localhost");
+    	isLocal = isLocal || url.startsWith(RMI_PREFIX + "127.0.0.1");
+    	isLocal = isLocal || url.startsWith(RMI_PREFIX + "127.0.1.1");
+    	
+    	LOGGER.debug("url: " + url + " isLocal: " + isLocal);
+    	
+        return isLocal;
+    }
+    
+    private String[] getIpAddresses()
+    {
+        try {
+			networkInterfaces = NetworkInterface.getNetworkInterfaces();
+		} catch (SocketException e5) {
+            LOGGER.error("Cannot instantiate IP resolver");
+            throw new RuntimeException(e5);
+		}
+		
+    	ArrayList<String> ipAddresses = new ArrayList<String>();
+    	
+        while (networkInterfaces.hasMoreElements()) {
+        	NetworkInterface networkInterface = networkInterfaces.nextElement();
+
+			for (InterfaceAddress interfaceAddress : networkInterface.getInterfaceAddresses())
+			{
+				if (ipNetworkPrefixLength == interfaceAddress.getNetworkPrefixLength())
+				{
+					ipAddresses.add( interfaceAddress.getAddress().getHostAddress().toString() );		
+				}
+			}
+        }
+        
+        String[] result = new String[ipAddresses.size()];
+        
+        return ipAddresses.toArray(result);
     }
 
 }
