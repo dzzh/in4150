@@ -1,0 +1,6 @@
+#Do not modify this file, create 'network.cfg' and work with it.
+#Do not commit 'network.cfg' to repository.
+
+node.url = rmi://localhost/process1
+node.url = rmi://localhost/process2
+node.url = rmi://localhost/process3
