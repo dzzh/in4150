@@ -22,8 +22,8 @@ public class ProcessManager {
     private static final Log LOGGER = LogFactory.getLog(ProcessManager.class);
 
     private static final String RMI_PREFIX = "rmi://";
-	short ipNetworkPrefixLength = 22;
-	
+    short ipNetworkPrefixLength = 22;
+
     private ArrayList<DA_Schiper_Eggli_Sandoz_RMI> processes;
     private Enumeration<NetworkInterface> networkInterfaces;
     private static final int INSTANTIATION_DELAY = 5000;
@@ -50,7 +50,6 @@ public class ProcessManager {
         processes = new ArrayList<DA_Schiper_Eggli_Sandoz_RMI>();
 
         //bind local processes and locate remote ones
-
         try {
             DA_Schiper_Eggli_Sandoz_RMI process;
             int processIndex = 0;
@@ -61,29 +60,28 @@ public class ProcessManager {
                     new Thread((DA_Schiper_Eggli_Sandoz) process).start();
                     Naming.bind(url, process);
                     processes.add(process);
-                } 
+                }
                 processIndex++;
-
 
             }
 
             //sleep is needed to instantiate local processes at all machines
-           LOGGER.debug("Waiting for remote processes to instantiate...");
-            try{
+            LOGGER.debug("Waiting for remote processes to instantiate...");
+            try {
                 Thread.sleep(INSTANTIATION_DELAY);
-            } catch(InterruptedException e){
+            } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
             LOGGER.debug("And looking them up.");
-            
-            for (String url : urls){
+
+            for (String url : urls) {
                 if (!isProcessLocal(url)) {
                     process = (DA_Schiper_Eggli_Sandoz_RMI) Naming.lookup(url);
                     LOGGER.debug("Found remote process with URL " + url);
                     processes.add(process);
                 }
             }
-            
+
         } catch (RemoteException e1) {
             e1.printStackTrace();
         } catch (AlreadyBoundException e2) {
@@ -95,48 +93,45 @@ public class ProcessManager {
         }
     }
 
-    private boolean isProcessLocal(String url){    	
-    	boolean isLocal = false;
-    	
-    	for (String ipAddress: this.getIpAddresses()){
-    		isLocal = isLocal || url.startsWith(RMI_PREFIX + ipAddress);
-    	}
-    	
-    	// special cases.
-    	isLocal = isLocal || url.startsWith(RMI_PREFIX + "localhost");
-    	isLocal = isLocal || url.startsWith(RMI_PREFIX + "127.0.0.1");
-    	isLocal = isLocal || url.startsWith(RMI_PREFIX + "127.0.1.1");
-    	
-    	LOGGER.debug("url: " + url + " isLocal: " + isLocal);
-    	
+    private boolean isProcessLocal(String url) {
+        boolean isLocal = false;
+
+        for (String ipAddress : getIpAddresses()) {
+            isLocal = isLocal || url.startsWith(RMI_PREFIX + ipAddress);
+        }
+
+        // special cases.
+        isLocal = isLocal || url.startsWith(RMI_PREFIX + "localhost");
+        isLocal = isLocal || url.startsWith(RMI_PREFIX + "127.0.0.1");
+        isLocal = isLocal || url.startsWith(RMI_PREFIX + "127.0.1.1");
+
+        LOGGER.debug("url: " + url + " isLocal: " + isLocal);
+
         return isLocal;
     }
-    
-    private String[] getIpAddresses()
-    {
+
+    private String[] getIpAddresses() {
         try {
-			networkInterfaces = NetworkInterface.getNetworkInterfaces();
-		} catch (SocketException e5) {
+            networkInterfaces = NetworkInterface.getNetworkInterfaces();
+        } catch (SocketException e5) {
             LOGGER.error("Cannot instantiate IP resolver");
             throw new RuntimeException(e5);
-		}
-		
-    	ArrayList<String> ipAddresses = new ArrayList<String>();
-    	
-        while (networkInterfaces.hasMoreElements()) {
-        	NetworkInterface networkInterface = networkInterfaces.nextElement();
-
-			for (InterfaceAddress interfaceAddress : networkInterface.getInterfaceAddresses())
-			{
-				if (ipNetworkPrefixLength == interfaceAddress.getNetworkPrefixLength())
-				{
-					ipAddresses.add( interfaceAddress.getAddress().getHostAddress().toString() );		
-				}
-			}
         }
-        
+
+        ArrayList<String> ipAddresses = new ArrayList<String>();
+
+        while (networkInterfaces.hasMoreElements()) {
+            NetworkInterface networkInterface = networkInterfaces.nextElement();
+
+            for (InterfaceAddress interfaceAddress : networkInterface.getInterfaceAddresses()) {
+                if (ipNetworkPrefixLength == interfaceAddress.getNetworkPrefixLength()) {
+                    ipAddresses.add(interfaceAddress.getAddress().getHostAddress().toString());
+                }
+            }
+        }
+
         String[] result = new String[ipAddresses.size()];
-        
+
         return ipAddresses.toArray(result);
     }
 

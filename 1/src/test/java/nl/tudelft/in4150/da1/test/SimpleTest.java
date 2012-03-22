@@ -43,7 +43,7 @@ public class SimpleTest{
             Message message2 = new Message(2, process1.getIndex(), process2.getIndex());
             process1.send(setup.getUrls()[process2.getIndex()],message2);
 
-            // Sleep atleast the sum of all delays to be sure all messages have arrived.
+            // Sleep at least the sum of all delays to be sure all messages have arrived.
             Thread.sleep(20);
 
             List<Message> messages = process2.getMessages();
@@ -86,7 +86,7 @@ public class SimpleTest{
             message3.setDelay(20);
             process1.send(setup.getUrls()[process3.getIndex()],message3 );
             
-            // Sleep atleast the sum of all delays to be sure all messages have arrived.
+            // Sleep at least the sum of all delays to be sure all messages have arrived.
             Thread.sleep(50);
 
             List<Message> messagesProcess2 = process2.getMessages();            
@@ -131,7 +131,7 @@ public class SimpleTest{
             Message message3 = new Message(3, process2.getIndex(), process3.getIndex());
             process2.send(setup.getUrls()[process3.getIndex()], message3);
             
-            // Sleep atleast the sum of all delays to be sure all messages have arrived.
+            // Sleep at least the sum of all delays to be sure all messages have arrived.
             Thread.sleep(150);
 
             List<Message> messagesProcess2 = process2.getMessages();
@@ -226,7 +226,7 @@ public class SimpleTest{
             message2.setDelay(0);
             process1.send(setup.getUrls()[process2.getIndex()],message2);
             
-            // Sleep atleast the sum of all delays to be sure all messages have arrived.
+            // Sleep at least the sum of all delays to be sure all messages have arrived.
             Thread.sleep(150);
 
             List<Message> messagesProcess2 = process2.getMessages();
@@ -270,7 +270,7 @@ public class SimpleTest{
             message3.setDelay(10);
             process2.send(setup.getUrls()[process3.getIndex()],message3);
             
-            // Sleep atleast the sum of all delays to be sure all messages have arrived.
+            // Sleep at least the sum of all delays to be sure all messages have arrived.
             Thread.sleep(150);
 
             List<Message> messagesProcess2 = process2.getMessages();
@@ -296,7 +296,7 @@ public class SimpleTest{
     @Test
     //@Ignore
     /**
-	 * See, Figure 5 in "A New Algorithm to Implement Causal Ordering."
+	 * See Figure 5 in "A New Algorithm to Implement Causal Ordering."
      */
     public void testcaseSchiperEggliSandoz(){
         DA_Schiper_Eggli_Sandoz_RMI process1 = setup.getProcesses().get(0);
@@ -333,7 +333,7 @@ public class SimpleTest{
             Message message6 = new Message(6, process4.getIndex(), process3.getIndex());
             process4.send(setup.getUrls()[process3.getIndex()], message6);
             
-            // Sleep atleast the sum of all delays to be sure all messages have arrived.
+            // Sleep at least the sum of all delays to be sure all messages have arrived.
             Thread.sleep(300);
 
             List<Message> messagesProcess2 = process2.getMessages();
