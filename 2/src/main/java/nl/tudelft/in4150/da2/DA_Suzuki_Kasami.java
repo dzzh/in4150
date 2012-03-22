@@ -17,8 +17,8 @@ import java.util.*;
  */
 public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_Kasami_RMI, Runnable {
 
-	private static final long serialVersionUID = 2526720373028386278L;
-	private static Log LOGGER = LogFactory.getLog(DA_Suzuki_Kasami.class);
+    private static final long serialVersionUID = 2526720373028386278L;
+    private static Log LOGGER = LogFactory.getLog(DA_Suzuki_Kasami.class);
 
     /**
      * Maximum delay simulating a computation unit within {@link #compute()} method and a critical section.
@@ -29,15 +29,15 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
      * A delay between checks of token acquisition.
      */
     private static final int TOKEN_WAIT_DELAY = 10;
-    
+
     /**
      * Cache to fasten lookup operations in remote registries
      */
     private Map<String, DA_Suzuki_Kasami_RMI> processCache;
 
-	// for every process the sequence number of the last request this process knows about.
+    // for every process the sequence number of the last request this process knows about.
     private List<Integer> N;
-    
+
     /**
      * Index of a current process
      */
@@ -52,7 +52,7 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
      * URLs of processes in a system
      */
     private String[] urls;
-    
+
     private Token token = null;
     private boolean inCriticalSection = false;
 
@@ -65,11 +65,11 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
      * Is true after the computations are done, is needed for debug purposes
      */
     private boolean computationFinished = false;
-    
+
     /**
      * Default constructor following RMI conventions
      *
-     * @param urls URLs of participating processes
+     * @param urls  URLs of participating processes
      * @param index index of current process
      * @throws RemoteException if RMI mechanisms fail
      */
@@ -80,7 +80,7 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
         this.index = index;
         this.urls = urls;
         this.numProcesses = urls.length;
-        
+
         reset();
     }
 
@@ -88,7 +88,7 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
      * {@inheritDoc}
      */
     @Override
-    public void reset(){
+    public void reset() {
 
         this.N = new ArrayList<Integer>(numProcesses);
         for (int i = 0; i < numProcesses; i++) {
@@ -107,23 +107,23 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
     public void compute() throws RemoteException {
         long t1 = System.currentTimeMillis();
         LOGGER.debug("Process " + index + " starts computations.");
-        try{
+        try {
             Thread.sleep(random.nextInt(MAX_COMPUTATION_DELAY));
-        } catch(InterruptedException e){
+        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
 
         criticalSectionWrapper();
 
-        try{
+        try {
             Thread.sleep(random.nextInt(MAX_COMPUTATION_DELAY));
-        } catch(InterruptedException e){
+        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
 
         long t2 = System.currentTimeMillis();
         computationFinished = true;
-        LOGGER.debug("Process " + index + " ends computations which lasted for " + (t2-t1) + " ms.");
+        LOGGER.debug("Process " + index + " ends computations which lasted for " + (t2 - t1) + " ms.");
     }
 
     /**
@@ -137,15 +137,14 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
      * {@inheritDoc}
      */
     @Override
-    public void receiveRequest(RequestMessage rm) {
-        LOGGER.debug("(" + index + ") received request");
+    public synchronized void receiveRequest(RequestMessage rm) {
+        LOGGER.debug("(" + index + ") received request from " + rm.getSrcId() + " with seq. " + rm.getSequence());
         N.set(rm.getSrcId(), rm.getSequence());
 
         if (!inCriticalSection && token != null && index != rm.getSrcId() &&
-                (N.get(rm.getSrcId()) > token.getTN().get(rm.getSrcId())))
-        {
+                (N.get(rm.getSrcId()) > token.getTN().get(rm.getSrcId()))) {
             sendToken(rm.getSrcUrl());
-        }    
+        }
     }
 
     /**
@@ -162,13 +161,14 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
     private void broadcastRequest() {
         int i = 0;
         LOGGER.debug("(" + index + ") broadcasting request");
-        for (String url : urls){
+        LOGGER.debug("(" + index + ") N: " + N);
+        for (String url : urls) {
             DA_Suzuki_Kasami_RMI dest = getProcess(url);
-            try{
+            try {
                 int sequence = N.get(i) + 1;
                 RequestMessage rm = new RequestMessage(urls[index], index, sequence);
                 dest.receiveRequest(rm);
-            } catch (RemoteException e){
+            } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -188,20 +188,15 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
      */
     private void dispatchToken() {
         token.getTN().set(index, N.get(index));
-        for (int j = index + 1; j < numProcesses && token != null; j++)
-        {
-            if(N.get(j) > token.getTN().get(j))
-            {
-                sendToken(urls[j]);
-                LOGGER.debug("(" + index + ") dispatched token to " + j);
-                break;
-            }
-        }
+        LOGGER.debug("(" + index + ") tries to dispatch token");
+        LOGGER.debug("TN: " + token.getTN());
+        LOGGER.debug("N: " + N);
 
-        for (int j = 1; j < index - 1 && token != null; j++)
-        {
-            if(N.get(j) > token.getTN().get(j))
-            {
+        for (int j = 0; j < numProcesses && token != null; j++) {
+            if (j == index) {
+                continue;
+            }
+            if (N.get(j) > token.getTN().get(j)) {
                 sendToken(urls[j]);
                 LOGGER.debug("(" + index + ") dispatched token to " + j);
                 break;
@@ -212,14 +207,14 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
     /**
      * Piece of computations requiring mutual exclusion
      */
-    private void criticalSection(){
+    private void criticalSection() {
         inCriticalSection = true;
         int delay = random.nextInt(MAX_COMPUTATION_DELAY);
         LOGGER.debug("Process " + index + " enters critical section and will compute for " + delay + " ms.");
 
-        try{
+        try {
             Thread.sleep(delay);
-        } catch(InterruptedException e){
+        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
 
@@ -229,21 +224,22 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
 
     /**
      * Sends token to (remote) process
+     *
      * @param url URL of a (remote) process to send token
      */
-     private void sendToken(String url){
+    private void sendToken(String url) {
         assert token != null;
         DA_Suzuki_Kasami_RMI dest = getProcess(url);
 
-        try{
+        try {
             LOGGER.debug("(" + index + ") sends token to " + dest.getIndex());
             TokenMessage tm = new TokenMessage(urls[index], index, token);
             dest.receiveToken(tm);
             token = null;
-        } catch (RemoteException e){
+        } catch (RemoteException e) {
             throw new RuntimeException(e);
         }
-        
+
     }
 
     /**
@@ -272,13 +268,16 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
     /**
      * Invokes {@link #criticalSection()} with all necessary pre- and post- actions according to algorithm
      */
-    private void criticalSectionWrapper(){
+    private void criticalSectionWrapper() {
 
-        if (token == null){
+        if (token == null) {
             broadcastRequest();
             waitForToken();
+        } else if (N.get(index) == 0){
+            //special case when process is assigned a token from client and starts computing for the first time
+            broadcastRequest();
         }
-        
+
         criticalSection();
         dispatchToken();
     }
@@ -286,16 +285,16 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
     /**
      * Puts process into sleeping state until token is acquired
      */
-    private void waitForToken(){
+    private void waitForToken() {
         int waitForToken = 0;
-        while (token == null){
+        while (token == null) {
             waitForToken++;
-            try{
+            try {
                 Thread.sleep(TOKEN_WAIT_DELAY);
-            } catch (InterruptedException e){
+            } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            if (waitForToken % 100 == 0){
+            if (waitForToken % 100 == 0) {
                 LOGGER.debug("(" + index + ") keeps waiting for token");
             }
         }
