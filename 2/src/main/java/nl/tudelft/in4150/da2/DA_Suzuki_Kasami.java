@@ -138,9 +138,10 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
      */
     @Override
     public synchronized void receiveRequest(RequestMessage rm) {
-        LOGGER.debug("(" + index + ") received request from " + rm.getSrcId() + " with seq. " + rm.getSequence());
+        LOGGER.trace("(" + index + ") received request from " + rm.getSrcId() + " with seq. " + rm.getSequence());
         N.set(rm.getSrcId(), rm.getSequence());
-
+        LOGGER.trace("(" + index + ") N: " + N);
+        
         if (!inCriticalSection && token != null && index != rm.getSrcId() &&
                 (N.get(rm.getSrcId()) > token.getTN().get(rm.getSrcId()))) {
             sendToken(rm.getSrcUrl());
@@ -159,14 +160,13 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
      * Broadcasts REQUEST message to all the processes
      */
     private void broadcastRequest() {
-        int i = 0;
+        N.set(index, N.get(index) + 1);
         LOGGER.debug("(" + index + ") broadcasting request");
-        LOGGER.debug("(" + index + ") N: " + N);
+        LOGGER.trace("(" + index + ") N: " + N);
         for (String url : urls) {
             DA_Suzuki_Kasami_RMI dest = getProcess(url);
             try {
-                int sequence = N.get(i) + 1;
-                RequestMessage rm = new RequestMessage(urls[index], index, sequence);
+                RequestMessage rm = new RequestMessage(urls[index], index, N.get(index));
                 dest.receiveRequest(rm);
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
@@ -269,15 +269,8 @@ public class DA_Suzuki_Kasami extends UnicastRemoteObject implements DA_Suzuki_K
      * Invokes {@link #criticalSection()} with all necessary pre- and post- actions according to algorithm
      */
     private void criticalSectionWrapper() {
-
-        if (token == null) {
-            broadcastRequest();
-            waitForToken();
-        } else if (N.get(index) == 0){
-            //special case when process is assigned a token from client and starts computing for the first time
-            broadcastRequest();
-        }
-
+        broadcastRequest();
+        waitForToken();
         criticalSection();
         dispatchToken();
     }
