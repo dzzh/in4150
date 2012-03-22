@@ -2,15 +2,12 @@ package nl.tudelft.in4150.da2.test;
 
 import nl.tudelft.in4150.da2.DA_Suzuki_Kasami_RMI;
 import nl.tudelft.in4150.da2.Token;
-import nl.tudelft.in4150.da2.TestSetup;
 import nl.tudelft.in4150.da2.message.TokenMessage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.rmi.RemoteException;
 
 public class SimpleTest{
     
@@ -34,6 +31,9 @@ public class SimpleTest{
         TestThread thread3 = new TestThread(process3);
 
         try{
+            process1.reset();
+            process2.reset();
+            process3.reset();
             Token token = Token.instantiate(3);
             TokenMessage tm = new TokenMessage("",0,token);
             new Thread(thread1).start();
@@ -41,7 +41,12 @@ public class SimpleTest{
             new Thread(thread2).start();
             new Thread(thread3).start();
             
-        } catch (RemoteException e){
+            Thread.sleep(10000);
+            Assert.assertTrue(process1.isComputationFinished());
+            Assert.assertTrue(process2.isComputationFinished());
+            Assert.assertTrue(process3.isComputationFinished());
+
+        } catch (Exception e){
             e.printStackTrace();
             Assert.fail();
         }

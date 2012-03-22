@@ -1,5 +1,6 @@
-package nl.tudelft.in4150.da2;
+package nl.tudelft.in4150.da2.test;
 
+import nl.tudelft.in4150.da2.DA_Suzuki_Kasami_RMI;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -28,10 +29,13 @@ public class TestSetup {
         try{
             config = new PropertiesConfiguration("network.cfg");
         } catch (ConfigurationException e) {
-            e.printStackTrace();
+            try{
+                config = new PropertiesConfiguration("network.cfg.default");
+            } catch (ConfigurationException e2) {
+                throw new RuntimeException(e2);
+            }
         }
 
-        assert config != null;
         urls = config.getStringArray("node.url");
         processes = new ArrayList<DA_Suzuki_Kasami_RMI>();
 

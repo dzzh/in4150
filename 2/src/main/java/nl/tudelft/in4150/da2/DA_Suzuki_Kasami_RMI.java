@@ -25,6 +25,7 @@ public interface DA_Suzuki_Kasami_RMI extends Remote{
 
     /**
      * Receives token from a (remote) process
+     *
      * @param tokenMessage message with token
      * @throws RemoteException
      */
@@ -43,4 +44,10 @@ public interface DA_Suzuki_Kasami_RMI extends Remote{
      */
     public void reset() throws RemoteException;
 
+    /**
+     * Returns the status of computations
+     * @return true if computations done, false otherwise
+     * @throws RemoteException
+     */
+    public boolean isComputationFinished() throws RemoteException;
 }
