@@ -10,8 +10,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class SimpleTest{
-    
+public class SmallConsequentTest{
+
     private TestSetup setup;
 
     private final static Log LOGGER = LogFactory.getLog(SimpleTest.class);
@@ -23,10 +23,10 @@ public class SimpleTest{
     }
 
     /**
-     * Three processes start compting simultaneously
+     * Three processes start computing sequentially
      */
     @Test
-    public void testCase(){
+    public void consequentTest(){
         DA_Suzuki_Kasami_RMI process1 = setup.getProcesses().get(0);
         TestThread thread1 = new TestThread(process1);
         DA_Suzuki_Kasami_RMI process2 = setup.getProcesses().get(1);
@@ -44,10 +44,12 @@ public class SimpleTest{
                 TokenMessage tm = new TokenMessage("",0,token);
                 process1.receiveToken(tm);
             }
+            Thread.sleep(3000);
             new Thread(thread2).start();
+            Thread.sleep(3000);
             new Thread(thread3).start();
-            
-            Thread.sleep(10000);
+
+            Thread.sleep(5000);
             Assert.assertTrue(process1.isComputationFinished());
             Assert.assertTrue(process2.isComputationFinished());
             Assert.assertTrue(process3.isComputationFinished());
