@@ -12,7 +12,7 @@ import java.util.*;
 
 /**
  * Implementation of randomized Byzantine agreement without authentication algorithm (Lamport-Pease-Shostak).
- * Synchronous communication is modelled by sending each message from node to other nodes each round.
+ * Synchronous communication is modeled by sending each message from node to other nodes each round.
  */
 public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RMI, Runnable {
 
