@@ -23,6 +23,11 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
      * Cache to fasten lookup operations in remote registries
      */
     private Map<String, DA_Byzantine_RMI> processCache;
+    
+    /**
+     * Cache to store the sequence number of the last received message from the corresponding process.
+     */
+    private Map<String, Integer> sequenceNumberCache;
 
     /**
      * Index of a current process

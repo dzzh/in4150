@@ -15,10 +15,10 @@ public class ForgedMessageFault extends AFault {
 		if(iteration >= this.iterationOfFailure && Math.random() < this.forgedMessageProbability)
 		{
 			switch(order){
-				case Attack:
-					return Order.Wait;
-				case Wait:
-					return Order.Attack;
+				case ATTACK:
+					return Order.RETREAT;
+				case RETREAT:
+					return Order.ATTACK;
 				default:
 					return null;
 			}			
