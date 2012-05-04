@@ -2,4 +2,7 @@
 **/.idea/
 **/*.iml
 network.cfg
-target/*
+**/target/*
+.classpath
+.project
+.settings/

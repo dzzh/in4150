@@ -1,5 +1,9 @@
 package nl.tudelft.in4150.da3;
 
+import nl.tudelft.in4150.da3.message.AckMessage;
+import nl.tudelft.in4150.da3.message.Message;
+import nl.tudelft.in4150.da3.message.OrderMessage;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -45,6 +49,12 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     private String[] urls;
 
     /**
+     * Counter of a messages sent by the process
+     */
+    private int nextMessageId = 1;
+    
+    
+    /**
      * Default constructor following RMI conventions
      *
      * @param urls  URLs of participating processes
@@ -61,7 +71,28 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 
         reset();
     }
-
+    
+    @Override
+    public void receiveOrder(OrderMessage message) throws RemoteException{
+    	
+    }
+    
+    @Override 
+    public void receiveAck(AckMessage message) throws RemoteException{
+    	
+    }
+    
+    
+    /**
+     * Constructs a template of a new message
+     * @param receiver
+     * @return
+     */
+    private Message getMessageTemplate(int receiver){
+    	nextMessageId++;
+    	return new Message(nextMessageId - 1, index, receiver);
+    }
+    
     @Override
     public void reset(){
 
@@ -74,8 +105,20 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     public int getIndex() {
         return index;
     }
+       
+    @Override
+	public boolean isFaulty() throws RemoteException {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
-    /**
+	@Override
+	public void setFaulty(boolean isFaulty) throws RemoteException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	/**
      * Returns a process specified by its URL either from a local cache or RMI lookup.
      *
      * @param url process url

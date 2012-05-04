@@ -3,11 +3,42 @@ package nl.tudelft.in4150.da3;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
+import nl.tudelft.in4150.da3.message.AckMessage;
+import nl.tudelft.in4150.da3.message.OrderMessage;
+
 /**
- * Remote interface to support RMI operations for Suzuki-Kasami mutual exclusion algorithm.
+ * Remote interface to support RMI operations for Lamport-Pease-Shostak algorithm.
  */
 public interface DA_Byzantine_RMI extends Remote{
 
+	/**
+	 * Actions by process on order delivery
+	 * @param message order
+	 * @throws RemoteException
+	 */
+	public void receiveOrder(OrderMessage message) throws RemoteException;
+	
+	/**
+	 * Actions by process on receiving a message delivery acknowledgment 
+	 * @param message acknowledgment message
+	 * @throws RemoteException
+	 */
+	public void receiveAck(AckMessage message) throws RemoteException;
+	
+	/**
+	 * Service method to check whether the process is faulty
+	 * @return faulty status
+	 * @throws RemoteException
+	 */
+	public boolean isFaulty() throws RemoteException;
+	
+	/**
+	 * Sets faulty status for the process. Is used by client while instantiating communication scheme.
+	 * @param isFaulty
+	 * @throws RemoteException
+	 */
+	public void setFaulty(boolean isFaulty) throws RemoteException;
+		
     /**
      * Index of a current process
      * @return index
