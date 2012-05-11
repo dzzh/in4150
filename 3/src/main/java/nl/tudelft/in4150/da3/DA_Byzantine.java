@@ -44,9 +44,15 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     //final decision
     private Order finalOrder = null;
     
-    private List<OrderMessage> incomingMessagesQueue = new LinkedList<OrderMessage>();
-    private List<OrderMessage> outcomingMessagesQueue = new LinkedList<OrderMessage>();
+    //queue of incoming messages needed to simulate synchronous communication
+    private Map<Integer, List<OrderMessage>> incomingMessages = new HashMap<Integer, List<OrderMessage>>();
+    
+    //queue of outcoming messages needed to simulate synchronous communication
+    private Map<Integer, List<OrderMessage>> outcomingMessages = new HashMap<Integer, List<OrderMessage>>();
         
+    private int currentStep;
+    private int maxTraitors;
+    
     /**
      * Default constructor following RMI conventions
      *
@@ -86,19 +92,35 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     	if (message.getAlreadyProcessed().isEmpty()){
     		broadcastOrder(message.getMaxTraitors(), message.getOrder(), message.getAlreadyProcessed());
     		finalOrder = message.getOrder();
+    		currentStep = message.getMaxTraitors();
+    		
+    	//lieutenants	
     	} else {
-    		if (message.getMaxTraitors() == 0){
-    			//bottom case of the recursion
-    			orders.put(message.getSender(), message.getOrder());
-    			if (orders.size() == numProcesses -  1){
-    				finalOrder = majority();
-    			}
-    		} else {
-    			//recursion step
-    			broadcastOrder(message.getMaxTraitors() - 1, message.getOrder(), message.getAlreadyProcessed());
+    		int step = message.getMaxTraitors();
+    		List<OrderMessage> messages = incomingMessages.get(step);
+    		if (messages == null){
+    			messages = new LinkedList<OrderMessage>();
+    		}
+    		messages.add(message);
+    		incomingMessages.put(step, messages);
+    		if (incomingMessages.get(currentStep).size() >= numProcesses - maxTraitors){
+    			processStep();
     		}
     	}
     	
+    }
+    
+    private void processStep(){
+//    	if (message.getMaxTraitors() == 0){
+//			//bottom case of the recursion
+//			orders.put(message.getSender(), message.getOrder());
+//			if (orders.size() == numProcesses -  1){
+//				finalOrder = majority();
+//			}
+//		} else {
+//			//recursion step
+//			broadcastOrder(message.getMaxTraitors() - 1, message.getOrder(), message.getAlreadyProcessed());
+//		}
     }
     
     @Override 
