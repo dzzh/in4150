@@ -23,6 +23,8 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     private static final long serialVersionUID = 2526720373028386278L;
     private static Log LOGGER = LogFactory.getLog(DA_Byzantine.class);
 
+    private boolean done;
+    
     /**
      * Cache to fasten lookup operations in remote registries
      */
@@ -73,8 +75,19 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     }
     
     @Override
+    public void start(){
+    	
+    }
+    
+    @Override
+    public boolean done(){
+    	return this.done;
+    }
+    
+    @Override
     public void receiveOrder(OrderMessage message) throws RemoteException{
     	
+    	// If f=0 then this.done=true;
     }
     
     @Override 
@@ -95,7 +108,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     
     @Override
     public void reset(){
-
+    	this.done = false;
     }
 
     /**
