@@ -23,39 +23,30 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     private static final long serialVersionUID = 2526720373028386278L;
     private static Log LOGGER = LogFactory.getLog(DA_Byzantine.class);
 
-    private boolean done;
-    
-    /**
-     * Cache to fasten lookup operations in remote registries
-     */
+    //Cache to fasten lookup operations in remote registries
     private Map<String, DA_Byzantine_RMI> processCache;
     
-    /**
-     * Cache to store the sequence number of the last received message from the corresponding process.
-     */
-    private Map<String, Integer> sequenceNumberCache;
-
-    /**
-     * Index of a current process
-     */
+    //Index of a current process
     private int index;
 
-    /**
-     * Number of processes participating in message exchange
-     */
+    //Number of processes participating in message exchange
     private int numProcesses;
 
-    /**
-     * URLs of processes in a system
-     */
+    //URLs of processes in a system
     private String[] urls;
 
-    /**
-     * Counter of a messages sent by the process
-     */
+    //Counter of a messages sent by the process
     private int nextMessageId = 1;
     
+    //list of orders come to a decision
+    private Map<Integer, Order> orders = new HashMap<Integer, Order>();
     
+    //final decision
+    private Order finalOrder = null;
+    
+    private List<OrderMessage> incomingMessagesQueue = new LinkedList<OrderMessage>();
+    private List<OrderMessage> outcomingMessagesQueue = new LinkedList<OrderMessage>();
+        
     /**
      * Default constructor following RMI conventions
      *
@@ -75,40 +66,59 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     }
     
     @Override
+    public void run() {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+    
+    @Override
     public void start(){
     	
     }
     
     @Override
-    public boolean done(){
-    	return this.done;
+    public boolean isDone(){
+    	return finalOrder != null; 
     }
     
     @Override
     public void receiveOrder(OrderMessage message) throws RemoteException{
+    	//commander
+    	if (message.getAlreadyProcessed().isEmpty()){
+    		broadcastOrder(message.getMaxTraitors(), message.getOrder(), message.getAlreadyProcessed());
+    		finalOrder = message.getOrder();
+    	} else {
+    		if (message.getMaxTraitors() == 0){
+    			//bottom case of the recursion
+    			orders.put(message.getSender(), message.getOrder());
+    			if (orders.size() == numProcesses -  1){
+    				finalOrder = majority();
+    			}
+    		} else {
+    			//recursion step
+    			broadcastOrder(message.getMaxTraitors() - 1, message.getOrder(), message.getAlreadyProcessed());
+    		}
+    	}
     	
-    	// If f=0 then this.done=true;
     }
     
     @Override 
     public void receiveAck(AckMessage message) throws RemoteException{
     	
     }
-    
-    
+        
     /**
      * Constructs a template of a new message
      * @param receiver
      * @return
      */
-    private Message getMessageTemplate(int receiver){
+    private OrderMessage getOrderMessageTemplate(int receiver){
     	nextMessageId++;
-    	return new Message(nextMessageId - 1, index, receiver);
+    	return new OrderMessage(nextMessageId - 1, index, receiver);
     }
     
     @Override
     public void reset(){
-    	this.done = false;
+
     }
 
     /**
@@ -153,10 +163,46 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
         }
         return result;
     }
-
-    @Override
-    public void run() {
-        //To change body of implemented methods use File | Settings | File Templates.
+    
+    
+    private void broadcastOrder(int maxTraitors, Order order, List<Integer> exceptions){
+    	for (int i = 0; i < numProcesses; i++){
+    		if (index != i && !exceptions.contains(i)){
+    			DA_Byzantine_RMI destination = getProcess(urls[i]);
+    			OrderMessage messageCopy = getOrderMessageTemplate(i);
+    			messageCopy.setOrder(order);
+    			messageCopy.setAlreadyProcessed(new LinkedList<Integer>(exceptions));
+    			messageCopy.getAlreadyProcessed().add(index);
+    			
+    			//first and last steps
+    			if (exceptions.isEmpty() || maxTraitors == 0){
+    				messageCopy.setMaxTraitors(maxTraitors);
+    			//intermediary steps	
+    			} else {
+    				messageCopy.setMaxTraitors(maxTraitors - 1);
+    			}
+    				
+    			try{
+    				destination.receiveOrder(messageCopy);
+    			} catch(RemoteException e){
+    				throw new RuntimeException(e);
+    			}
+       		}
+    	}
+    }
+    
+    private Order majority(){
+    	List<Order> ordersList = new LinkedList<Order>();
+    	for (int i = 0; i < numProcesses; i++){
+    		if (i != index){
+    			Order currentOrder = orders.get(i);
+    			if (currentOrder == null){
+    				currentOrder = Order.getDefaultOrder();
+    			}
+    			ordersList.add(currentOrder);
+    		}
+    	}
+    	return Order.getMostFrequentOrder(ordersList);
     }
 }
 

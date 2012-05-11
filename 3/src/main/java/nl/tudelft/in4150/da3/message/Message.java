@@ -5,7 +5,6 @@ public class Message {
 	private int id;
 	private int sender;
 	private int receiver;
-	private Object contents;
 	
 	public Message(int id, int sender, int receiver) {
 		this.id = id;
@@ -25,12 +24,4 @@ public class Message {
 		return receiver;
 	}
 
-	protected Object getContents() {
-		return contents;
-	}
-
-	protected void setContents(Object contents) {
-		this.contents = contents;
-	}
-	
 }
