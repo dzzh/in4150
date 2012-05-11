@@ -16,8 +16,8 @@ public class ForgedMessageFault extends AFault {
 		{
 			switch(order){
 				case ATTACK:
-					return Order.WAIT;
-				case WAIT:
+					return Order.RETREAT;
+				case RETREAT:
 					return Order.ATTACK;
 				default:
 					return null;
