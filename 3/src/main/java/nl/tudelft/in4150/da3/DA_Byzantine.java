@@ -1,7 +1,6 @@
 package nl.tudelft.in4150.da3;
 
 import nl.tudelft.in4150.da3.message.AckMessage;
-import nl.tudelft.in4150.da3.message.Message;
 import nl.tudelft.in4150.da3.message.OrderMessage;
 
 import org.apache.commons.logging.Log;
@@ -22,6 +21,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 
     private static final long serialVersionUID = 2526720373028386278L;
     private static Log LOGGER = LogFactory.getLog(DA_Byzantine.class);
+    private static final int TIME_OUT_MS = 500;
 
     //Cache to fasten lookup operations in remote registries
     private Map<String, DA_Byzantine_RMI> processCache;
@@ -48,10 +48,12 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     private Map<Integer, List<OrderMessage>> incomingMessages = new HashMap<Integer, List<OrderMessage>>();
     
     //queue of outcoming messages needed to simulate synchronous communication
-    private Map<Integer, List<OrderMessage>> outcomingMessages = new HashMap<Integer, List<OrderMessage>>();
+    private List<OrderMessage> outcomingMessages = new LinkedList<OrderMessage>();
         
     private int currentStep;
     private int maxTraitors;
+    
+    private long lastOutcomingCheck = 0;
     
     /**
      * Default constructor following RMI conventions
@@ -77,11 +79,6 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     }
     
     @Override
-    public void start(){
-    	
-    }
-    
-    @Override
     public boolean isDone(){
     	return finalOrder != null; 
     }
@@ -96,18 +93,40 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     		
     	//lieutenants	
     	} else {
+    		
+    		//send acknowledgment
+    		DA_Byzantine_RMI receiver = getProcess(urls[message.getSender()]);
+    		AckMessage ack = getAckMessageTemplate(message.getSender());
+    		ack.setAckId(message.getId());
+    		try{
+    			receiver.receiveAck(ack);
+    		} catch (RemoteException e){
+    			throw new RuntimeException(e);
+    		}
+    		
     		int step = message.getMaxTraitors();
     		List<OrderMessage> messages = incomingMessages.get(step);
     		if (messages == null){
     			messages = new LinkedList<OrderMessage>();
     		}
-    		messages.add(message);
-    		incomingMessages.put(step, messages);
-    		if (incomingMessages.get(currentStep).size() >= numProcesses - maxTraitors){
-    			processStep();
+    		
+    		//misbehavior prevention
+    		boolean isDuplicate = false;
+    		for (OrderMessage om : messages){
+    			if (om.getId() == message.getId()){
+    				isDuplicate = true;
+    				break;
+    			}
+    		}
+    		
+    		if (!isDuplicate){
+	    		messages.add(message);
+	    		incomingMessages.put(step, messages);
+	    		if (incomingMessages.get(currentStep).size() >= numProcesses - maxTraitors){
+	    			processStep();
+	    		}
     		}
     	}
-    	
     }
     
     private void processStep(){
@@ -125,7 +144,33 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     
     @Override 
     public void receiveAck(AckMessage message) throws RemoteException{
+    	OrderMessage messageToRemove = null;
+    	for (OrderMessage om : outcomingMessages){
+    		if (om.getId() == message.getAckId()){
+    			messageToRemove = om;
+    			break;
+    		}
+    	}
+    	outcomingMessages.remove(messageToRemove);
     	
+    	//second attempt to delivery failed messages, if it also fails we give up
+    	long now = System.currentTimeMillis();
+    	List<OrderMessage> messagesToRemove = new LinkedList<OrderMessage>();
+    	if (now - lastOutcomingCheck > TIME_OUT_MS){
+    		lastOutcomingCheck = now;
+    		for (OrderMessage om : outcomingMessages){
+    			if (now - om.getTimestamp() > TIME_OUT_MS){
+    				try{
+    					DA_Byzantine_RMI dest = getProcess(urls[om.getReceiver()]);
+    					dest.receiveOrder(om);
+    					messagesToRemove.add(om);
+    				} catch (RemoteException e){
+    					throw new RuntimeException(e);
+    				}
+    			}
+    		}
+    		outcomingMessages.removeAll(messagesToRemove);
+    	}
     }
         
     /**
@@ -136,6 +181,16 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     private OrderMessage getOrderMessageTemplate(int receiver){
     	nextMessageId++;
     	return new OrderMessage(nextMessageId - 1, index, receiver);
+    }
+    
+    /**
+     * Constructs a template of a new acknowledgment message
+     * @param receiver
+     * @return
+     */
+    private AckMessage getAckMessageTemplate(int receiver){
+    	nextMessageId++;
+    	return new AckMessage(nextMessageId - 1, index, receiver);
     }
     
     @Override
@@ -203,7 +258,8 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     			} else {
     				messageCopy.setMaxTraitors(maxTraitors - 1);
     			}
-    				
+    			outcomingMessages.add(messageCopy);    			
+    			
     			try{
     				destination.receiveOrder(messageCopy);
     			} catch(RemoteException e){
