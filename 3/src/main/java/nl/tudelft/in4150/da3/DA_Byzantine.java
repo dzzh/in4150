@@ -75,7 +75,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     
     @Override
     public void run() {
-        //To change body of implemented methods use File | Settings | File Templates.
+        //intentionally left blank
     }
     
     @Override
@@ -110,22 +110,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     			messages = new LinkedList<OrderMessage>();
     		}
     		
-    		//misbehavior prevention
-    		boolean isDuplicate = false;
-    		for (OrderMessage om : messages){
-    			if (om.getId() == message.getId()){
-    				isDuplicate = true;
-    				break;
-    			}
-    		}
     		
-    		if (!isDuplicate){
-	    		messages.add(message);
-	    		incomingMessages.put(step, messages);
-	    		if (incomingMessages.get(currentStep).size() >= numProcesses - maxTraitors){
-	    			processStep();
-	    		}
-    		}
     	}
     }
     
