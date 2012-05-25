@@ -12,12 +12,6 @@ import nl.tudelft.in4150.da3.message.OrderMessage;
 public interface DA_Byzantine_RMI extends Remote{
 
 	/**
-	 * Starts the process.
-	 * @throws RemoteException
-	 */
-	public void start() throws RemoteException;
-	
-	/**
 	 * Indicates whether this process is finished or not.
 	 * @return processIsDone : Boolean
 	 * @throws RemoteException

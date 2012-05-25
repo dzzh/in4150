@@ -22,6 +22,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 
     private static final long serialVersionUID = 2526720373028386278L;
     private static Log LOGGER = LogFactory.getLog(DA_Byzantine.class);
+    private static final int TIME_OUT_MS = 500;
 
     //Cache to fasten lookup operations in remote registers
     private Map<String, DA_Byzantine_RMI> processCache;
@@ -48,10 +49,12 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     private Map<List<Integer>, OrderMessage> incomingMessages = new HashMap<List<Integer>, OrderMessage>();
     
     //queue of outgoing messages needed to simulate synchronous communication
-    //private Map<Integer, List<OrderMessage>> outgoingMessages = new HashMap<Integer, List<OrderMessage>>();
+    private List<OrderMessage> outgoingMessages = new LinkedList<OrderMessage>();
     
     private Map<List<Integer>, OrderSet> orderSets = new HashMap<List<Integer>, OrderSet>();
         
+    
+    private long lastOutcomingCheck = 0;
     
     /**
      * Default constructor following RMI conventions
@@ -73,12 +76,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     
     @Override
     public void run() {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
-    
-    @Override
-    public void start(){
-    	
+        //intentionally left blank
     }
     
     @Override
@@ -143,7 +141,33 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     
     @Override 
     public void receiveAck(AckMessage message) throws RemoteException{
+    	OrderMessage messageToRemove = null;
+    	for (OrderMessage om : outgoingMessages){
+    		if (om.getId() == message.getAckId()){
+    			messageToRemove = om;
+    			break;
+    		}
+    	}
+    	outgoingMessages.remove(messageToRemove);
     	
+    	//second attempt to delivery failed messages, if it also fails we give up
+    	long now = System.currentTimeMillis();
+    	List<OrderMessage> messagesToRemove = new LinkedList<OrderMessage>();
+    	if (now - lastOutcomingCheck > TIME_OUT_MS){
+    		lastOutcomingCheck = now;
+    		for (OrderMessage om : outgoingMessages){
+    			if (now - om.getTimestamp() > TIME_OUT_MS){
+    				try{
+    					DA_Byzantine_RMI dest = getProcess(urls[om.getReceiver()]);
+    					dest.receiveOrder(om);
+    					messagesToRemove.add(om);
+    				} catch (RemoteException e){
+    					throw new RuntimeException(e);
+    				}
+    			}
+    		}
+    		outgoingMessages.removeAll(messagesToRemove);
+    	}
     }
         
     /**
@@ -154,6 +178,16 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     private OrderMessage getOrderMessageTemplate(int receiver){
     	nextMessageId++;
     	return new OrderMessage(nextMessageId - 1, index, receiver);
+    }
+    
+    /**
+     * Constructs a template of a new acknowledgment message
+     * @param receiver
+     * @return
+     */
+    private AckMessage getAckMessageTemplate(int receiver){
+    	nextMessageId++;
+    	return new AckMessage(nextMessageId - 1, index, receiver);
     }
     
     @Override
