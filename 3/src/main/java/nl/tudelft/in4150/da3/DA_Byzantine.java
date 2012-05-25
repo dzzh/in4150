@@ -57,6 +57,8 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     
     private long lastOutcomingCheck = 0;
     
+    private boolean firstMessageReceived = false;
+    
     /**
      * Default constructor following RMI conventions
      *
@@ -110,10 +112,18 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 				} catch (InterruptedException e) {
 					throw new RuntimeException(e);
 				}
-	    		processStep(step);
+	    		if (firstMessageReceived){
+	    			processStep(step);
+	    		}
 	    	}
     	} else {
+    		firstMessageReceived = true;
     		process(message);
+    		Step firstStep = stepMap.get(message.getMaxTraitors() - 1);
+    		if (firstStep.isReady()){
+    			LOGGER.debug("firstStep ready");
+    			processStep(firstStep);
+    		}
     	}
     }
     
@@ -121,6 +131,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     	for (OrderMessage msg : step.getMessages()){
 			process(msg);
 		}
+    	stepMap.remove(step);
     }
     
     /**
