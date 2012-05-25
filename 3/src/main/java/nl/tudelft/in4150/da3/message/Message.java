@@ -1,7 +1,10 @@
 package nl.tudelft.in4150.da3.message;
 
-public class Message {
+import java.io.Serializable;
 
+public class Message implements Serializable{
+
+	private static final long serialVersionUID = -1213496469674330242L;
 	private int id;
 	private int sender;
 	private int receiver;

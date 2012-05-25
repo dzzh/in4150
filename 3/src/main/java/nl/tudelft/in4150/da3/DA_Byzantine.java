@@ -5,6 +5,7 @@ import nl.tudelft.in4150.da3.message.OrderMessage;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.varia.DenyAllFilter;
 
 import java.net.MalformedURLException;
 import java.rmi.Naming;
@@ -86,20 +87,40 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     
     @Override
     public void receiveOrder(OrderMessage message) throws RemoteException{
+    	LOGGER.debug("Process " + index + " received order from " + message.getSender());
+    	//LOGGER.debug("[" + index + "] " + message.toString());
     	incomingMessages.put(message.getAlreadyProcessed(), message);
     	sendAck(message);
     	
-    	Step step = stepMap.get(message.getMaxTraitors());
-    	if (step == null){
-    		step = new Step(numProcesses, message.getMaxTraitors());
-    		stepMap.put(message.getMaxTraitors(), step);
+    	if (message.getSender() != 0){
+    		LOGGER.debug("Trait: " + message.getMaxTraitors());
+	    	Step step = stepMap.get(message.getMaxTraitors());
+	    	if (step == null){
+	    		step = new Step(numProcesses, message.getMaxTraitors());
+	    		stepMap.put(message.getMaxTraitors(), step);
+	    	}
+	    	step.addMessage(message);
+	    	if (step.isReady()){
+	    		LOGGER.debug("Step ready");
+	    		processStep(step);
+	    	} else if (step.isWaitingForMissedMessages()){
+	    		LOGGER.debug("Step waiting");
+	    		try {
+					Thread.sleep(Step.WAITING_TIME_OUT);
+				} catch (InterruptedException e) {
+					throw new RuntimeException(e);
+				}
+	    		processStep(step);
+	    	}
+    	} else {
+    		process(message);
     	}
-    	step.addMessage(message);
-    	if (step.isReady()){
-    		for (OrderMessage msg : step.getMessages()){
-    			process(msg);
-    		}
-    	}
+    }
+    
+    private void processStep(Step step){
+    	for (OrderMessage msg : step.getMessages()){
+			process(msg);
+		}
     }
     
     /**
@@ -108,11 +129,11 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
      */
     private void process(OrderMessage message)
     {    	
+    	LOGGER.debug("[" + index + "] " + message.toString());
+    	
     	Order order = message.getOrder();
     	Integer maxTraitors = message.getMaxTraitors();
     	List<Integer> alreadyProcessed = message.getAlreadyProcessed();
-    	List<Integer> keyPreviousRecursionStep = alreadyProcessed.subList(0, alreadyProcessed.size() - 2);
-    	OrderSet dependentOrderSet = this.orderSets.get(keyPreviousRecursionStep);
     	
     	if (alreadyProcessed.isEmpty()) // Initial case of the recursion (commander)
     	{
@@ -121,8 +142,19 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     		return;
     	} 
     	
+    	OrderSet dependentOrderSet = null;
+    	List<Integer> keyPreviousRecursionStep = null;
+    	if (alreadyProcessed.size() > 1){
+    		keyPreviousRecursionStep = alreadyProcessed.subList(0, alreadyProcessed.size() - 1);
+    		dependentOrderSet = this.orderSets.get(keyPreviousRecursionStep);
+    		LOGGER.debug(orderSets);
+    		LOGGER.debug("[ " + index + "] key: "+ keyPreviousRecursionStep);
+    		LOGGER.debug("dep: " + dependentOrderSet);
+    	}
+    	
     	if (maxTraitors != 0) // Intermediate case of the recursion (lieutenant)
     	{
+    		LOGGER.debug("[ " + index + "] test: " + maxTraitors);
 	    	OrderSet orderSet = new OrderSet(maxTraitors, alreadyProcessed, order);    	
 	    	if (alreadyProcessed.size() > 1)
 	    	{
@@ -144,6 +176,9 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     		}
     		else
     		{
+    			LOGGER.debug(dependentOrderSet);
+    			LOGGER.debug(alreadyProcessed);
+    			LOGGER.debug("[ " + index + "] - dependentOrderSet.size: " + dependentOrderSet.size);
     			dependentOrderSet.add(alreadyProcessed, order);
     		}
     	}
@@ -151,7 +186,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     
     private void sendAck(OrderMessage orderMessage){
     	AckMessage message = getAckMessageTemplate(orderMessage.getSender());
-    	message.setAckId(message.getAckId());
+    	message.setAckId(message.getId());
     	DA_Byzantine_RMI receiver = getProcess(urls[orderMessage.getSender()]);
     	try{
     		receiver.receiveAck(message);

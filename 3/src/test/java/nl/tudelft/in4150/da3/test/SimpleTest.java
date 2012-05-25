@@ -1,6 +1,5 @@
 package nl.tudelft.in4150.da3.test;
 
-import nl.tudelft.in4150.da3.DA_Byzantine;
 import nl.tudelft.in4150.da3.DA_Byzantine_RMI;
 import nl.tudelft.in4150.da3.Order;
 import nl.tudelft.in4150.da3.message.OrderMessage;
@@ -9,7 +8,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class SimpleTest{
@@ -28,19 +26,19 @@ public class SimpleTest{
      * Three processes start simultaneously
      */
     @Test
-    public void testCase(){
-        DA_Byzantine commanderProcess = (DA_Byzantine) setup.getProcesses().get(0);
-        Thread thread1 = new Thread(commanderProcess);
-        thread1.start();
-        DA_Byzantine lieutenantProcess1 = (DA_Byzantine) setup.getProcesses().get(1);
-        Thread thread2 = new Thread(lieutenantProcess1);
-        thread2.start();
-        DA_Byzantine lieutenantProcess2 = (DA_Byzantine) setup.getProcesses().get(2);
-        Thread thread3 = new Thread(lieutenantProcess2);
-        thread3.start();
-        DA_Byzantine lieutenantProcess3 = (DA_Byzantine) setup.getProcesses().get(2);
-        Thread thread4 = new Thread(lieutenantProcess3);
-        thread4.start();
+    public void testSimple(){
+        DA_Byzantine_RMI commanderProcess = (DA_Byzantine_RMI) setup.getProcesses().get(0);
+        TestThread thread1 = new TestThread(commanderProcess);
+        new Thread(thread1).start();
+        DA_Byzantine_RMI lieutenantProcess1 = (DA_Byzantine_RMI) setup.getProcesses().get(1);
+        TestThread thread2 = new TestThread(lieutenantProcess1);
+        new Thread(thread2).start();
+        DA_Byzantine_RMI lieutenantProcess2 = (DA_Byzantine_RMI) setup.getProcesses().get(2);
+        TestThread thread3 = new TestThread(lieutenantProcess2);
+        new Thread(thread3).start();
+        DA_Byzantine_RMI lieutenantProcess3 = (DA_Byzantine_RMI) setup.getProcesses().get(2);
+        TestThread thread4 = new TestThread(lieutenantProcess3);
+        new Thread(thread4).start();
 
         int maxTraitors = 1;
         Order order = Order.ATTACK;        

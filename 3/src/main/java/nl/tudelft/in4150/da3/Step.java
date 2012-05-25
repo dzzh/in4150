@@ -3,15 +3,20 @@ package nl.tudelft.in4150.da3;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import nl.tudelft.in4150.da3.message.OrderMessage;
 
 /**
  * Contains information about the messages needed for a certain round of algorithm execution 
  */
 public class Step {
+
+	private static Log LOGGER = LogFactory.getLog(Step.class);
 	
 	//time out in ms to wait for slow messages after receiving minimum number to proceed
-	private static long WAITING_TIME_OUT = 100;
+	public static long WAITING_TIME_OUT = 100;
 
 	private StepState state = StepState.FORMS_POOL;
 	private List<OrderMessage> messages;
@@ -39,7 +44,9 @@ public class Step {
 		}
 		
 		messages.add(message);
-		if (messages.size() == numProcesses - maxTraitors){
+		LOGGER.debug("Added message to Step with " + maxTraitors + " traitors. Messages: " + messages.size());
+		//max mumber of messages in a communication round is number of processors - traitors - commander - process itself
+		if (messages.size() == numProcesses - maxTraitors - 2){
 			state = StepState.WAITS_FOR_TIME_OUT;
 			startWaitingForMissedMessages = System.currentTimeMillis();
 		}
@@ -64,6 +71,10 @@ public class Step {
 			}
 			return false;
 		}
+	}
+	
+	public boolean isWaitingForMissedMessages(){
+		return state == StepState.WAITS_FOR_TIME_OUT;
 	}
 	
 	public List<OrderMessage> getMessages(){

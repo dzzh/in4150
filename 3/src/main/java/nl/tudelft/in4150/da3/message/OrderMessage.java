@@ -7,6 +7,7 @@ import nl.tudelft.in4150.da3.Order;
 
 public class OrderMessage extends Message{
 	
+	private static final long serialVersionUID = -5697651885486403504L;
 	private Order order;
 	int maxTraitors;
 	List<Integer> alreadyProcessed;
@@ -39,6 +40,13 @@ public class OrderMessage extends Message{
 	public void setAlreadyProcessed(List<Integer> alreadyProcessed) {
 		this.alreadyProcessed = alreadyProcessed;
 	}
+	
+	@Override
+	public String toString() {
+		return "OrderMessage [order=" + order + ", maxTraitors=" + maxTraitors
+				+ ", alreadyProcessed=" + alreadyProcessed + "]";
+	}
+	
 	/*
 	public String key()
 	{

@@ -11,11 +11,15 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class OrderSet extends Observable implements Observer 
 {
+	private static Log LOGGER = LogFactory.getLog(OrderSet.class);
+	
 	Map<List<Integer>, Order> orderset;
-	int size;
+	public int size;
 
 	/**
 	 * Construct OrderSet instance and add values of commander.
@@ -41,6 +45,7 @@ public class OrderSet extends Observable implements Observer
     	
     	if (this.orderset.size() == this.size)
     	{
+    		LOGGER.debug("Observers notified.");
     		// The key from the commander.
     		List<Integer> initialKey = this.orderset.keySet().iterator().next();
     		AbstractMap.SimpleEntry<List<Integer>, Order>  se = new AbstractMap.SimpleEntry<List<Integer>, Order>(initialKey, this.majority());
