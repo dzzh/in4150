@@ -65,4 +65,8 @@ public class Step {
 			return false;
 		}
 	}
+	
+	public List<OrderMessage> getMessages(){
+		return messages;
+	}
 }

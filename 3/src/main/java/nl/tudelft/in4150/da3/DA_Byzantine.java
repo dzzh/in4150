@@ -6,7 +6,6 @@ import nl.tudelft.in4150.da3.message.OrderMessage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.awt.TrayIcon.MessageType;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
@@ -53,6 +52,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     
     private Map<List<Integer>, OrderSet> orderSets = new HashMap<List<Integer>, OrderSet>();
         
+    private Map<Integer, Step> stepMap = new HashMap<Integer, Step>();
     
     private long lastOutcomingCheck = 0;
     
@@ -86,14 +86,24 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     
     @Override
     public void receiveOrder(OrderMessage message) throws RemoteException{
-    	// !!! Do something to make communication synchronous.
-    	this.incomingMessages.put(message.getAlreadyProcessed(), message);
+    	incomingMessages.put(message.getAlreadyProcessed(), message);
+    	sendAck(message);
     	
-    	this.process(message);
+    	Step step = stepMap.get(message.getMaxTraitors());
+    	if (step == null){
+    		step = new Step(numProcesses, message.getMaxTraitors());
+    		stepMap.put(message.getMaxTraitors(), step);
+    	}
+    	step.addMessage(message);
+    	if (step.isReady()){
+    		for (OrderMessage msg : step.getMessages()){
+    			process(msg);
+    		}
+    	}
     }
     
     /**
-     * Apply the Lamport Pease Shostak distributed algorithm for solving the Byzantine Generals problem.
+     * Apply the Lamport-Pease-Shostak distributed algorithm for solving the Byzantine Generals problem.
      * @param message The message to be processed.
      */
     private void process(OrderMessage message)
@@ -136,6 +146,17 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     		{
     			dependentOrderSet.add(alreadyProcessed, order);
     		}
+    	}
+    }
+    
+    private void sendAck(OrderMessage orderMessage){
+    	AckMessage message = getAckMessageTemplate(orderMessage.getSender());
+    	message.setAckId(message.getAckId());
+    	DA_Byzantine_RMI receiver = getProcess(urls[orderMessage.getSender()]);
+    	try{
+    		receiver.receiveAck(message);
+    	} catch (RemoteException e){
+    		throw new RuntimeException(e);
     	}
     }
     
