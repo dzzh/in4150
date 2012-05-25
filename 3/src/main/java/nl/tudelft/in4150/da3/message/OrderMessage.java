@@ -39,4 +39,15 @@ public class OrderMessage extends Message{
 	public void setAlreadyProcessed(List<Integer> alreadyProcessed) {
 		this.alreadyProcessed = alreadyProcessed;
 	}
+	/*
+	public String key()
+	{
+		String key = "|";
+		for (int id : this.alreadyProcessed)
+		{
+			key+=id+"|";
+		}
+		return key;
+	}
+	*/
 }

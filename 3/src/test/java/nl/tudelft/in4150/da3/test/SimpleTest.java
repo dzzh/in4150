@@ -61,10 +61,10 @@ public class SimpleTest{
             new Thread(thread1).start();
             
             Thread.sleep(10000);
-            Assert.assertTrue(commanderProcess.done());
-            Assert.assertTrue(lieutenantProcess1.done());
-            Assert.assertTrue(lieutenantProcess2.done());
-            Assert.assertTrue(lieutenantProcess3.done());
+            Assert.assertTrue(commanderProcess.isDone());
+            Assert.assertTrue(lieutenantProcess1.isDone());
+            Assert.assertTrue(lieutenantProcess2.isDone());
+            Assert.assertTrue(lieutenantProcess3.isDone());
 
         } catch (Exception e){
             e.printStackTrace();
