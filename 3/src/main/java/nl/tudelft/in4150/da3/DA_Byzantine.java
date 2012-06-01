@@ -17,7 +17,7 @@ import java.util.*;
  * Implementation of randomized Byzantine agreement without authentication algorithm (Lamport-Pease-Shostak).
  * Synchronous communication is modeled by sending each message from node to other nodes each round.
  */
-public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RMI, Runnable, Observer {
+public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RMI, Runnable{
 
     private static final long serialVersionUID = 2526720373028386278L;
     private static Log LOGGER = LogFactory.getLog(DA_Byzantine.class);
@@ -50,13 +50,10 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     //queue of outgoing messages needed to simulate synchronous communication
     private List<OrderMessage> outgoingMessages = new LinkedList<OrderMessage>();
 
-    private Map<List<Integer>, OrderSet> orderSets = new HashMap<List<Integer>, OrderSet>();
-
-    private Map<Integer, Step> stepMap = new HashMap<Integer, Step>();
-
     private long lastOutcomingCheck = 0;
 
-    private boolean firstMessageReceived = false;
+    //the root of the decision tree
+    private Node root = new Node(0, Order.getDefaultOrder());
 
     /**
      * Default constructor following RMI conventions
@@ -87,62 +84,20 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     }
 
     @Override
+    //TODO consider case when lieutenant does not receive message from commander
     public void receiveOrder(OrderMessage message) throws RemoteException {
         LOGGER.debug(echoIndex() + "received order from " + message.getSender());
         incomingMessages.put(message.getAlreadyProcessed(), message);
         sendAck(message);
 
-        //valid for the exchange rounds starting from 2, when commander doesn't participate in the exchange process
-        if (message.getSender() != 0) {
-            LOGGER.debug(echoIndex() + "Traitors: " + message.getMaxTraitors());
-            Step step = stepMap.get(message.getMaxTraitors());
-            if (step == null) {
-                step = new Step(numProcesses, message.getMaxTraitors());
-                stepMap.put(message.getMaxTraitors(), step);
-            }
-            step.addMessage(message);
-            if (step.isReady()) {
-                LOGGER.debug(echoIndex() + "Step ready");
-                processStep(step);
-            } else if (step.isWaitingForMissedMessages()) {
-                LOGGER.debug(echoIndex() + "Step waiting");
-                try {
-                    Thread.sleep(Step.WAITING_TIME_OUT * 2);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-                if (firstMessageReceived) {
-                    processStep(step);
-                }
-            }
+        process(message);
 
-            //valid for rounds 0 and 1, when commander receives order from client (0)
-            // and redistributes it among lieutenants (1)
-        } else {
-            firstMessageReceived = true;
-            process(message);
-            Step firstStep = stepMap.get(message.getMaxTraitors() - 1);
-            if (firstStep != null && firstStep.isReady()) {
-                LOGGER.debug(echoIndex() + "firstStep ready");
-                processStep(firstStep);
-            }
+        if (isTreeReady()){
+            decide();
         }
     }
 
-    private void processStep(Step step) {
-        if (step.isReady()) {
-            LOGGER.debug(echoIndex() + "Step ready");
-            LOGGER.debug(echoIndex() + "Processing step with " + step.getMaxTraitors() + " traitors " +
-                    "and " + step.getMessages().size() + " messages");
-            for (OrderMessage msg : step.getMessages()) {
-                process(msg);
-            }
-            stepMap.remove(step.getMaxTraitors());
-        } else {
-            LOGGER.error(echoIndex() + "Cannot process step with " + step.getMaxTraitors() + " traitors: step not ready.");
-            throw new RuntimeException();
-        }
-    }
+
 
     /**
      * Apply the Lamport-Pease-Shostak distributed algorithm for solving the Byzantine Generals problem.
@@ -150,45 +105,27 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
      * @param message The message to be processed.
      */
     private void process(OrderMessage message) {
-        LOGGER.debug(echoIndex() + "processing " + message.toString() + " from " + message.getSender());
 
         Order order = message.getOrder();
         Integer maxTraitors = message.getMaxTraitors();
         List<Integer> alreadyProcessed = message.getAlreadyProcessed();
 
-        if (alreadyProcessed.isEmpty()) // Initial case of the recursion (commander)
-        {
-            finalOrder = order;
+        //commander receives the message from the client and redistributes it
+        if (message.getSender() == 0 && index == 0){
+            finalOrder = message.getOrder();
             broadcastOrder(maxTraitors, order, alreadyProcessed);
-            return;
-        }
 
-        OrderSet dependentOrderSet = null;
-        List<Integer> keyPreviousRecursionStep;
-        if (alreadyProcessed.size() > 1) {
-            keyPreviousRecursionStep = alreadyProcessed.subList(0, alreadyProcessed.size() - 1);
-            dependentOrderSet = this.orderSets.get(keyPreviousRecursionStep);
-        }
-
-        if (maxTraitors != 0) // Intermediate case of the recursion (lieutenant)
-        {
-            OrderSet orderSet = new OrderSet(maxTraitors, alreadyProcessed, order);
-            if (alreadyProcessed.size() > 1) {
-                orderSet.addObserver(dependentOrderSet);
-            } else // The top of the recursion.
-            {
-                orderSet.addObserver(this);
-            }
-            this.orderSets.put(alreadyProcessed, orderSet);
-
+        //lieutenant receives the first message directly from commander
+        } else if (message.getSender() == 0){
+            root.setOrder(message.getOrder());
             broadcastOrder(maxTraitors - 1, order, alreadyProcessed);
-        } else // Bottom case of the recursion (lieutenant)
-        {
-            if (alreadyProcessed.size() == 1) // Initial case of the recursion (lieutenant) when f=0.
-            {
-                this.finalOrder = order;
-            } else {
-                dependentOrderSet.add(alreadyProcessed, order);
+
+        //lieutenants exchange messages
+        } else {
+            Node node = Node.findNodeBySourcePath(root, alreadyProcessed.subList(1, alreadyProcessed.size()));
+            node.setOrder(order);
+            if (maxTraitors != 0){
+                broadcastOrder(maxTraitors - 1, order, alreadyProcessed);
             }
         }
     }
@@ -328,28 +265,6 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 
     private String echoIndex() {
         return "[" + index + "] ";
-    }
-
-    /* (non-Javadoc)
-      * @see java.util.Observer#update(java.util.Observable, java.lang.Object)
-      */
-
-    /**
-     * Update observer with the outcome of the majority vote of the set of the Observable and the corresponding key.
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public void update(Observable arg0, Object arg1) {
-        LOGGER.debug("---Update called-------------------------------------------");
-        AbstractMap.SimpleEntry<List<Integer>, Order> se;
-        if (arg1 instanceof AbstractMap.SimpleEntry<?, ?>) {
-            try {
-                se = (AbstractMap.SimpleEntry<List<Integer>, Order>) arg1;
-                this.finalOrder = se.getValue();
-            } catch (Exception e) {
-                LOGGER.debug("invalid cast to SimpleEntry<List<Integer>, Order>.");
-            }
-        }
     }
 }
 
