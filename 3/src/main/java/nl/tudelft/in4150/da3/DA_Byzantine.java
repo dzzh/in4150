@@ -5,7 +5,6 @@ import nl.tudelft.in4150.da3.message.OrderMessage;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.varia.DenyAllFilter;
 
 import java.net.MalformedURLException;
 import java.rmi.Naming;
@@ -89,13 +88,12 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     
     @Override
     public void receiveOrder(OrderMessage message) throws RemoteException{
-    	LOGGER.debug("Process " + index + " received order from " + message.getSender());
-    	//LOGGER.debug("[" + index + "] " + message.toString());
+    	LOGGER.debug(echoIndex() + "received order from " + message.getSender());
     	incomingMessages.put(message.getAlreadyProcessed(), message);
     	sendAck(message);
     	
     	if (message.getSender() != 0){
-    		LOGGER.debug("Trait: " + message.getMaxTraitors());
+    		LOGGER.debug(echoIndex() + "Traitors: " + message.getMaxTraitors());
 	    	Step step = stepMap.get(message.getMaxTraitors());
 	    	if (step == null){
 	    		step = new Step(numProcesses, message.getMaxTraitors());
@@ -103,10 +101,10 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 	    	}
 	    	step.addMessage(message);
 	    	if (step.isReady()){
-	    		LOGGER.debug("Step ready");
+	    		LOGGER.debug(echoIndex() + "Step ready");
 	    		processStep(step);
 	    	} else if (step.isWaitingForMissedMessages()){
-	    		LOGGER.debug("Step waiting");
+	    		LOGGER.debug(echoIndex() + "Step waiting");
 	    		try {
 					Thread.sleep(Step.WAITING_TIME_OUT);
 				} catch (InterruptedException e) {
@@ -120,18 +118,20 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     		firstMessageReceived = true;
     		process(message);
     		Step firstStep = stepMap.get(message.getMaxTraitors() - 1);
-    		if (firstStep.isReady()){
-    			LOGGER.debug("firstStep ready");
+    		if (firstStep != null && firstStep.isReady()){
+    			LOGGER.debug(echoIndex() + "firstStep ready");
     			processStep(firstStep);
     		}
     	}
     }
     
     private void processStep(Step step){
+        LOGGER.debug(echoIndex() +  "Processing step with " + step.getMaxTraitors() + " traitors " +
+                "and " + step.getMessages().size() + " messages");
     	for (OrderMessage msg : step.getMessages()){
 			process(msg);
 		}
-    	stepMap.remove(step);
+    	stepMap.remove(step.getMaxTraitors());
     }
     
     /**
@@ -140,7 +140,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
      */
     private void process(OrderMessage message)
     {    	
-    	LOGGER.debug("[" + index + "] " + message.toString());
+    	LOGGER.debug(echoIndex() + "processing " + message.toString() + " from " + message.getSender());
     	
     	Order order = message.getOrder();
     	Integer maxTraitors = message.getMaxTraitors();
@@ -158,14 +158,11 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     	if (alreadyProcessed.size() > 1){
     		keyPreviousRecursionStep = alreadyProcessed.subList(0, alreadyProcessed.size() - 1);
     		dependentOrderSet = this.orderSets.get(keyPreviousRecursionStep);
-    		LOGGER.debug(orderSets);
-    		LOGGER.debug("[ " + index + "] key: "+ keyPreviousRecursionStep);
-    		LOGGER.debug("dep: " + dependentOrderSet);
     	}
     	
     	if (maxTraitors != 0) // Intermediate case of the recursion (lieutenant)
     	{
-    		LOGGER.debug("[ " + index + "] test: " + maxTraitors);
+    		LOGGER.debug(echoIndex() +  "max traitors: " + maxTraitors);
 	    	OrderSet orderSet = new OrderSet(maxTraitors, alreadyProcessed, order);    	
 	    	if (alreadyProcessed.size() > 1)
 	    	{
@@ -187,9 +184,6 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     		}
     		else
     		{
-    			LOGGER.debug(dependentOrderSet);
-    			LOGGER.debug(alreadyProcessed);
-    			LOGGER.debug("[ " + index + "] - dependentOrderSet.size: " + dependentOrderSet.size);
     			dependentOrderSet.add(alreadyProcessed, order);
     		}
     	}
@@ -331,6 +325,10 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     	}
     }
 
+    private String echoIndex(){
+        return "[" + index + "] ";
+    }
+
 	/* (non-Javadoc)
 	 * @see java.util.Observer#update(java.util.Observable, java.lang.Object)
 	 */
@@ -351,7 +349,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 			}
 			catch (Exception e)
 			{
-				LOGGER.equals("invalid cast to SimpleEntry<List<Integer>, Order>.");
+				LOGGER.debug("invalid cast to SimpleEntry<List<Integer>, Order>.");
 			}
 		}		
 	}

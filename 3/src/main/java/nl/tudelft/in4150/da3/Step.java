@@ -80,4 +80,8 @@ public class Step {
 	public List<OrderMessage> getMessages(){
 		return messages;
 	}
+
+    public int getMaxTraitors() {
+        return maxTraitors;
+    }
 }
