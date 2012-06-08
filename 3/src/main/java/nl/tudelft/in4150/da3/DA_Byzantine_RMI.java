@@ -65,7 +65,7 @@ public interface DA_Byzantine_RMI extends Remote{
      * Resets the state of current process allowing to run several test cases without restart.
      * @throws RemoteException
      */
-    public void reset() throws RemoteException;
+    public void reset(int numProcesses) throws RemoteException;
 
     /**
      * Runs a decision process after the decision tree is built. Is invoked internally.

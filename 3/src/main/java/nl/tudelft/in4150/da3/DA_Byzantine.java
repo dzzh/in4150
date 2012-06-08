@@ -72,8 +72,6 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
         this.index = index;
         this.urls = urls;
         this.numProcesses = urls.length;
-
-        reset();
     }
 
     @Override
@@ -88,7 +86,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 
     @Override
     public void receiveOrder(OrderMessage message) throws RemoteException {
-        LOGGER.debug(echoIndex() + "received order from " + message.getSender());
+        LOGGER.debug(echoIndex() + "received " + message.getOrder() + " order from " + message.getSender());
         incomingMessages.put(message.getAlreadyProcessed(), message);
         sendAck(message);
 
@@ -210,7 +208,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     }
 
     @Override
-    public void reset() {
+    public void reset(int numProcesses) {
         nextMessageId = 1;
         finalOrder = null;
         incomingMessages = new HashMap<List<Integer>, OrderMessage>();
@@ -219,6 +217,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
         root = new Node(0);
         waiter = new Waiter(this);
         fault = new NoFault(-1);
+        this.numProcesses = numProcesses;
     }
 
     /**
@@ -264,7 +263,8 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
                 Order orderWithFaultApplied = this.getFault().applyFaultyBehavior(order, alreadyProcessed.size());
 
                 if (!(getFault() instanceof NoFault)){
-                    LOGGER.debug(echoIndex() + "is faulty. Sends " + orderWithFaultApplied + " to process " + i);
+                    LOGGER.debug(echoIndex() + "is faulty. Sends " + orderWithFaultApplied + " to process " + i +
+                    " (Non-faulty order is " + order + ")");
                 }
 
                 //does not send anything if the faulty behavior requests so
@@ -338,5 +338,6 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
             reportMissedMessages(n);
         }
     }
+
 }
 
