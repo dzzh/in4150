@@ -199,4 +199,24 @@ public class Node {
         return Order.getMostFrequentOrder(orders);
     }
 
+    /**
+     * Returns a list of source values for the path from the current node to root starting from the root
+     * @param currentNode current node
+     * @param currentSequence already available sequence
+     * @return list of source values
+     */
+    protected static List<Integer> getSourceSequence(Node currentNode, List<Integer> currentSequence){
+
+        if (currentSequence == null){
+            currentSequence = new LinkedList<Integer>();
+        }
+
+        if (currentNode.parent == null){
+            return currentSequence;
+        } else{
+            currentSequence.add(0, currentNode.source);
+            return getSourceSequence(currentNode.parent, currentSequence);
+        }
+
+    }
 }

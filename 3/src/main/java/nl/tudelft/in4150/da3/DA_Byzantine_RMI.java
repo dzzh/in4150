@@ -12,7 +12,7 @@ import nl.tudelft.in4150.da3.message.OrderMessage;
 public interface DA_Byzantine_RMI extends Remote{
 
 	/**
-	 * Indicates whether this process is finished or not.
+	 * Indicates whether the decision for this process was made
 	 * @return processIsDone : Boolean
 	 * @throws RemoteException
 	 */

@@ -5,6 +5,7 @@ import nl.tudelft.in4150.da3.message.OrderMessage;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 
 import java.net.MalformedURLException;
 import java.rmi.Naming;
@@ -83,7 +84,6 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     }
 
     @Override
-    //TODO consider case when lieutenant does not receive message from commander
     public void receiveOrder(OrderMessage message) throws RemoteException {
         LOGGER.debug(echoIndex() + "received order from " + message.getSender());
         incomingMessages.put(message.getAlreadyProcessed(), message);
@@ -277,6 +277,16 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 
     private String echoIndex() {
         return "[" + index + "] ";
+    }
+
+    protected void reportMissedMessages(Node root){
+        if (!root.isReady()){
+            LOGGER.info(echoIndex() + "did not receive message with sequence " + Node.getSourceSequence(root, null));
+        }
+
+        for (Node n : root.getChildren()){
+            reportMissedMessages(n);
+        }
     }
 }
 
