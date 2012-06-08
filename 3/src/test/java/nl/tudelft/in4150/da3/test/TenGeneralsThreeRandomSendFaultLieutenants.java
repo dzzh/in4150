@@ -2,13 +2,13 @@ package nl.tudelft.in4150.da3.test;
 
 import nl.tudelft.in4150.da3.DA_Byzantine_RMI;
 import nl.tudelft.in4150.da3.Order;
-import nl.tudelft.in4150.da3.fault.ForgedMessageFault;
+import nl.tudelft.in4150.da3.fault.RandomSendFault;
 import nl.tudelft.in4150.da3.message.OrderMessage;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TenGeneralsThreeForgedMessageFaultLieutenants {
+public class TenGeneralsThreeRandomSendFaultLieutenants {
 	private TestSetup setup;
 
     //private final static Log LOGGER = LogFactory.getLog(SimpleTest.class);
@@ -48,9 +48,9 @@ public class TenGeneralsThreeForgedMessageFaultLieutenants {
             lieutenantProcess7.reset(numProcesses);
             lieutenantProcess8.reset(numProcesses);
             lieutenantProcess9.reset(numProcesses);
-            lieutenantProcess1.setFault(new ForgedMessageFault(0, 1));
-            lieutenantProcess2.setFault(new ForgedMessageFault(0, 1));
-            lieutenantProcess3.setFault(new ForgedMessageFault(0, 1));
+            lieutenantProcess1.setFault(new RandomSendFault(0, 0.5));
+            lieutenantProcess2.setFault(new RandomSendFault(0, 0.5));
+            lieutenantProcess3.setFault(new RandomSendFault(0, 0.5));
             
             // Gives new order to himself, like a root in a graph is it's own parent.
             // The already processed stays empty.

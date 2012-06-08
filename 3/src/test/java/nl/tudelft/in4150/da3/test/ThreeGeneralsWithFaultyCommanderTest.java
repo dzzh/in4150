@@ -44,9 +44,20 @@ public class ThreeGeneralsWithFaultyCommanderTest {
             commanderProcess.receiveOrder(message);
 
             Thread.sleep(5000);
+            
+            int totalNumberOfReceivedMessages = commanderProcess.getNumberOfReceivedMessages();
+            totalNumberOfReceivedMessages += lieutenantProcess1.getNumberOfReceivedMessages();
+            totalNumberOfReceivedMessages += lieutenantProcess2.getNumberOfReceivedMessages();
+            
+            System.out.println("Total number of messages send: " + totalNumberOfReceivedMessages);
+            
             Assert.assertTrue(commanderProcess.isDone());
             Assert.assertTrue(lieutenantProcess1.isDone());
-            Assert.assertTrue(lieutenantProcess2.isDone());
+            Assert.assertTrue(lieutenantProcess2.isDone());      
+
+            Assert.assertEquals(order, commanderProcess.getFinalOrder());
+            Assert.assertEquals(order, lieutenantProcess1.getFinalOrder());
+            Assert.assertEquals(order, lieutenantProcess2.getFinalOrder());
 
         } catch (Exception e){
             e.printStackTrace();

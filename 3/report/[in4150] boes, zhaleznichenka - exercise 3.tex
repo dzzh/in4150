@@ -89,7 +89,7 @@ The sections below show a number of testcases for the Byzantine Generals problem
 \begin{itemize}
 \item 4 Generals
 \item 0 Traitors
-\item Attack is the initial order from the commander
+\item Attack is the initial order given to the commander
 \end{itemize}
 
 With these parameters the expected number of messages to be send is \(O(4^{0+1}) = 4\)
@@ -118,7 +118,7 @@ With these parameters the expected number of messages to be send is \(O(4^{0+1})
 \begin{itemize}
 \item 4 Generals
 \item 1 Traitors with a forged message fault
-\item Attack is the initial order from the commander
+\item Attack is the initial order given to the commander
 \end{itemize}
 
 With these parameters the expected number of messages to be send is \(O(4^{1+1}) = 16\)
@@ -147,7 +147,7 @@ With these parameters the expected number of messages to be send is \(O(4^{1+1})
 \begin{itemize}
 \item 4 Generals
 \item 2 Traitors with a forged message fault
-\item Attack is the initial order from the commander
+\item Attack is the initial order given to the commander
 \end{itemize}
 
 With these parameters the expected number of messages to be send is \(O(4^{2+1}) = 64\)
@@ -161,9 +161,127 @@ With these parameters the expected number of messages to be send is \(O(4^{2+1})
 
 \subsubsection*{Results}
 \begin{enumerate}
-\item Not all processes finish
+\item All processes finish
 \item Not for every process the order equals the initial order form the commander
 \item The total number of messages send is 16
 \end{enumerate}
+
+
+
+
+
+\subsection{Three Generals with Faulty Lieutenant}
+
+\subsubsection*{Parameters}
+\begin{itemize}
+\item 3 Generals
+\item 1 Traitor with a forged message fault
+\item Attack is the initial order given to the commander
+\end{itemize}
+
+With these parameters the expected number of messages to be send is \(O(3^{1+1}) = 9\)
+
+\subsubsection*{What is tested}
+\begin{enumerate}
+\item Do the processes finish
+\item Does the order of processes equal the intial order from the commander
+\item What is the total number of send messages
+\end{enumerate}
+
+\subsubsection*{Results}
+\begin{enumerate}
+\item All processes finish
+\item Not in all cases the orders of all processes equal the initial order form the commander
+\item The total number of messages send is 5
+\end{enumerate}
+
+
+
+
+
+\subsection{Three Generals with Faulty Commander}
+
+\subsubsection*{Parameters}
+\begin{itemize}
+\item 3 Generals
+\item 1 Traitors (commander) with a forged message fault
+\item Attack is the initial order given to the commander
+\end{itemize}
+
+With these parameters the expected number of messages to be send is \(O(3^{1+1}) = 9\)
+
+\subsubsection*{What is tested}
+\begin{enumerate}
+\item Do the processes finish
+\item Does the order of processes equal the intial order from the commander
+\item What is the total number of send messages
+\end{enumerate}
+
+\subsubsection*{Results}
+\begin{enumerate}
+\item All processes finish
+\item Not in all cases the orders of all processes equal the initial order form the commander
+\item The total number of messages send is 5
+\end{enumerate}
+
+
+
+
+\subsection{Ten Gererals Three Traitors with Forged Message Fault}
+
+\subsubsection*{Parameters}
+\begin{itemize}
+\item 10 Generals
+\item 3 Traitors with a forged message fault
+\item Attack is the initial order given to the commander
+\end{itemize}
+
+With these parameters the expected number of messages to be send is \(O(10^{3+1}) = 10000\)
+
+\subsubsection*{What is tested}
+\begin{enumerate}
+\item Do the processes finish
+\item Does the order of processes equal the intial order from the commander
+\item What is the total number of send messages
+\end{enumerate}
+
+\subsubsection*{Results}
+\begin{enumerate}
+\item All processes finish
+\item For all processes the order equals the initial order form the commander
+\item The total number of messages send is 3610
+\end{enumerate}
+
+
+
+
+
+\subsection{Ten Gererals Three Traitors with Random Message Fault}
+
+\subsubsection*{Parameters}
+\begin{itemize}
+\item 10 Generals
+\item 3 Traitors with a random message fault
+\item 0.5 is the random send parameter
+\item Attack is the initial order given to the commander
+\end{itemize}
+
+With these parameters the expected number of messages to be send is \(O(10^{3+1}) = 10000\)
+
+\subsubsection*{What is tested}
+\begin{enumerate}
+\item Do the processes finish
+\item Does the order of processes equal the intial order from the commander
+\item What is the total number of send messages
+\end{enumerate}
+
+\subsubsection*{Results}
+\begin{enumerate}
+\item All processes finish
+\item For all processes the order equals the initial order form the commander
+\item The total number of messages send is 2261
+\end{enumerate}
+
+
 
 \end{document}
