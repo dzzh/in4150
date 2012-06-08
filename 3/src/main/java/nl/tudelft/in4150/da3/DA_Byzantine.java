@@ -1,5 +1,7 @@
 package nl.tudelft.in4150.da3;
 
+import nl.tudelft.in4150.da3.fault.AFault;
+import nl.tudelft.in4150.da3.fault.NoFault;
 import nl.tudelft.in4150.da3.message.AckMessage;
 import nl.tudelft.in4150.da3.message.OrderMessage;
 
@@ -53,6 +55,8 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     private Node root = new Node(0);
 
     private Waiter waiter = new Waiter(this);
+    
+    private AFault fault = new NoFault(-1);
 
     /**
      * Default constructor following RMI conventions
@@ -218,18 +222,6 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
         return index;
     }
 
-    @Override
-    public boolean isFaulty() throws RemoteException {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public void setFaulty(boolean isFaulty) throws RemoteException {
-        // TODO Auto-generated method stub
-
-    }
-
     /**
      * Returns a process specified by its URL either from a local cache or RMI lookup.
      *
@@ -255,6 +247,10 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 
 
     private void broadcastOrder(int currentMaxTraitors, int totalTraitors, Order order, List<Integer> alreadyProcessed) {
+    	// Apply faulty behavior. The iteration is indicated by the sequence of generals that already received the order
+    	// .i.e. the depth of the recursion.
+    	Order orderWithFaultApplied = this.getFault().applyFaultyBehaviour(order, alreadyProcessed.size() + 1);
+    	
         for (int i = 0; i < numProcesses; i++) {
             if (index != i && !alreadyProcessed.contains(i)) {
                 DA_Byzantine_RMI destination = getProcess(urls[i]);
@@ -262,7 +258,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
                 OrderMessage messageCopy = getOrderMessageTemplate(i);
                 messageCopy.setCurrentMaxTraitors(currentMaxTraitors);
                 messageCopy.setTotalTraitors(totalTraitors);
-                messageCopy.setOrder(order);
+                messageCopy.setOrder(orderWithFaultApplied);
                 messageCopy.setAlreadyProcessed(new LinkedList<Integer>(alreadyProcessed));
                 messageCopy.getAlreadyProcessed().add(index);
 
@@ -273,6 +269,39 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
                 }
             }
         }
+    }
+    
+    /**
+     * Set the type of faulty behavior for this process.
+     * @param fault
+     */
+    @Override
+    public void setFault(AFault fault)
+    {
+    	if (fault != null)
+    	{
+    		this.fault = fault;
+    	}
+    }
+    
+    /**
+     * Get the type of faulty behavior for this process.
+     * @return
+     */
+    @Override
+    public AFault getFault()
+    {
+    	return this.fault;
+    }
+    
+    /**
+     * Check if this process has faulty behavior i.e. not NoFault.
+     * @return
+     */
+    @Override
+    public boolean hasFault()
+    {
+    	return !(this.getFault() instanceof NoFault);
     }
 
     private String echoIndex() {

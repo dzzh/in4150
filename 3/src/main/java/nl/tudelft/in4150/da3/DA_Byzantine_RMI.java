@@ -3,6 +3,7 @@ package nl.tudelft.in4150.da3;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
+import nl.tudelft.in4150.da3.fault.AFault;
 import nl.tudelft.in4150.da3.message.AckMessage;
 import nl.tudelft.in4150.da3.message.OrderMessage;
 
@@ -37,14 +38,21 @@ public interface DA_Byzantine_RMI extends Remote{
 	 * @return faulty status
 	 * @throws RemoteException
 	 */
-	public boolean isFaulty() throws RemoteException;
+	public boolean hasFault() throws RemoteException;
 	
 	/**
-	 * Sets faulty status for the process. Is used by client while instantiating communication scheme.
-	 * @param isFaulty
+	 * Sets the fault for the process. Is used by client while instantiating communication scheme.
+	 * @param fault
 	 * @throws RemoteException
 	 */
-	public void setFaulty(boolean isFaulty) throws RemoteException;
+	public void setFault(AFault fault) throws RemoteException;
+	
+	/**
+	 * Get the fault of this process.
+	 * @return AFault
+	 * @throws RemoteException
+	 */
+	public AFault getFault() throws RemoteException;
 		
     /**
      * Index of a current process
