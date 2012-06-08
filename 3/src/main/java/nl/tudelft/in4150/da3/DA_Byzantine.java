@@ -19,7 +19,7 @@ import java.util.*;
  * Implementation of randomized Byzantine agreement without authentication algorithm (Lamport-Pease-Shostak).
  * Synchronous communication is modeled by sending each message from node to other nodes each round.
  */
-public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RMI, Runnable{
+public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RMI, Runnable {
 
     private static final long serialVersionUID = 2526720373028386278L;
     private static Log LOGGER = LogFactory.getLog(DA_Byzantine.class);
@@ -55,7 +55,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     private Node root = new Node(0);
 
     private Waiter waiter = new Waiter(this);
-    
+
     private AFault fault = new NoFault(-1);
 
     /**
@@ -95,13 +95,13 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
         Node messageInTheTree = process(message);
 
         if (messageInTheTree != null && Node.isTreeReady(root, numProcesses, message.getTotalTraitors()) &&
-                !isDone() && !waiter.isStarted()){
+                !isDone() && !waiter.isStarted()) {
             //wait for the late messages and decide
             new Thread(waiter).start();
         }
     }
 
-    public void decide(){
+    public void decide() {
         finalOrder = Node.decide(root);
         LOGGER.info(echoIndex() + "decided to " + finalOrder.toString().toLowerCase());
         reportMissedMessages(root);
@@ -122,22 +122,22 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
         List<Integer> alreadyProcessed = message.getAlreadyProcessed();
 
         //commander receives the message from the client and redistributes it
-        if (message.getSender() == 0 && index == 0){
+        if (message.getSender() == 0 && index == 0) {
             finalOrder = message.getOrder();
             LOGGER.info(echoIndex() + "decided to " + finalOrder.toString().toLowerCase());
             broadcastOrder(currentMaxTraitors, totalTraitors, order, alreadyProcessed);
 
-        //lieutenant receives the first message directly from commander
-        } else if (message.getSender() == 0){
+            //lieutenant receives the first message directly from commander
+        } else if (message.getSender() == 0) {
             root.setOrder(message.getOrder());
             root.setReady(true);
             broadcastOrder(currentMaxTraitors - 1, totalTraitors, order, alreadyProcessed);
 
-        //lieutenants exchange messages
+            //lieutenants exchange messages
         } else {
             result = Node.findNodeBySourcePath(root, alreadyProcessed.subList(1, alreadyProcessed.size()));
             result.setOrder(order);
-            if (currentMaxTraitors != 0){
+            if (currentMaxTraitors != 0) {
                 broadcastOrder(currentMaxTraitors - 1, totalTraitors, order, alreadyProcessed);
             }
         }
@@ -218,6 +218,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
         lastOutcomingCheck = 0;
         root = new Node(0);
         waiter = new Waiter(this);
+        fault = new NoFault(-1);
     }
 
     /**
@@ -253,13 +254,23 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 
 
     private void broadcastOrder(int currentMaxTraitors, int totalTraitors, Order order, List<Integer> alreadyProcessed) {
-    	// Apply faulty behavior. The iteration is indicated by the sequence of generals that already received the order
-    	// .i.e. the depth of the recursion.
-    	Order orderWithFaultApplied = this.getFault().applyFaultyBehaviour(order, alreadyProcessed.size() + 1);
-    	
+
         for (int i = 0; i < numProcesses; i++) {
             if (index != i && !alreadyProcessed.contains(i)) {
                 DA_Byzantine_RMI destination = getProcess(urls[i]);
+
+                // Apply faulty behavior. The iteration is indicated by the sequence of generals
+                // that already received the order, .i.e. the depth of the recursion.
+                Order orderWithFaultApplied = this.getFault().applyFaultyBehavior(order, alreadyProcessed.size() + 1);
+
+                if (!(getFault() instanceof NoFault)){
+                    LOGGER.debug(echoIndex() + "is faulty. Sends " + orderWithFaultApplied + " to process " + i);
+                }
+
+                //does not send anything if the faulty behavior requests so
+                if (orderWithFaultApplied == null){
+                    continue;
+                }
 
                 OrderMessage messageCopy = getOrderMessageTemplate(i);
                 messageCopy.setCurrentMaxTraitors(currentMaxTraitors);
@@ -276,50 +287,54 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
             }
         }
     }
-    
+
     /**
      * Set the type of faulty behavior for this process.
-     * @param fault
+     *
+     * @param fault fault
      */
     @Override
-    public void setFault(AFault fault)
-    {
-    	if (fault != null)
-    	{
-    		this.fault = fault;
-    	}
+    public void setFault(AFault fault) {
+        if (fault != null) {
+            this.fault = fault;
+        }
     }
-    
+
     /**
      * Get the type of faulty behavior for this process.
-     * @return
+     *
+     * @return fault
      */
     @Override
-    public AFault getFault()
-    {
-    	return this.fault;
+    public AFault getFault() {
+        return this.fault;
     }
-    
+
     /**
      * Check if this process has faulty behavior i.e. not NoFault.
-     * @return
+     *
+     * @return true if the process is faulty, false otherwise
      */
     @Override
-    public boolean hasFault()
-    {
-    	return !(this.getFault() instanceof NoFault);
+    public boolean hasFault() {
+        return !(this.getFault() instanceof NoFault);
     }
 
     private String echoIndex() {
         return "[" + index + "] ";
     }
 
-    protected void reportMissedMessages(Node root){
-        if (!root.isReady()){
+    /**
+     * Logs all the messages that were not received by the process
+     *
+     * @param root decision tree root
+     */
+    protected void reportMissedMessages(Node root) {
+        if (!root.isReady()) {
             LOGGER.info(echoIndex() + "did not receive message with sequence " + Node.getSourceSequence(root, null));
         }
 
-        for (Node n : root.getChildren()){
+        for (Node n : root.getChildren()) {
             reportMissedMessages(n);
         }
     }

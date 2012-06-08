@@ -23,13 +23,9 @@ public class SimpleTest{
     @Test
     public void testSimple(){
         DA_Byzantine_RMI commanderProcess = setup.getProcesses().get(0);
-        TestThread thread1 = new TestThread(commanderProcess);
         DA_Byzantine_RMI lieutenantProcess1 = setup.getProcesses().get(1);
-        TestThread thread2 = new TestThread(lieutenantProcess1);
         DA_Byzantine_RMI lieutenantProcess2 = setup.getProcesses().get(2);
-        TestThread thread3 = new TestThread(lieutenantProcess2);
         DA_Byzantine_RMI lieutenantProcess3 = setup.getProcesses().get(2);
-        TestThread thread4 = new TestThread(lieutenantProcess3);
 
         int maxTraitors = 1;
         Order order = Order.ATTACK;        
@@ -48,12 +44,6 @@ public class SimpleTest{
             message.setTotalTraitors(maxTraitors);
             message.setOrder(order);
             commanderProcess.receiveOrder(message);
-            
-            // Start all processes and the commander last, so that everyone is able to receive a message.
-            new Thread(thread2).start();
-            new Thread(thread3).start();
-            new Thread(thread4).start();
-            new Thread(thread1).start();
             
             Thread.sleep(10000);
             Assert.assertTrue(commanderProcess.isDone());

@@ -42,7 +42,7 @@ public interface DA_Byzantine_RMI extends Remote{
 	
 	/**
 	 * Sets the fault for the process. Is used by client while instantiating communication scheme.
-	 * @param fault
+	 * @param fault fault
 	 * @throws RemoteException
 	 */
 	public void setFault(AFault fault) throws RemoteException;
