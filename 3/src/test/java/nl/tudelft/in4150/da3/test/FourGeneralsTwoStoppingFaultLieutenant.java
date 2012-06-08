@@ -29,9 +29,8 @@ public class FourGeneralsTwoStoppingFaultLieutenant {
         DA_Byzantine_RMI lieutenantProcess2 = setup.getProcesses().get(2);
         DA_Byzantine_RMI lieutenantProcess3 = setup.getProcesses().get(3);
 
-        int maxTraitors = 1;
+        int maxTraitors = 2;
         Order order = Order.ATTACK;        
-        
         try{
             commanderProcess.reset(numProcesses);
             lieutenantProcess1.reset(numProcesses);
@@ -53,7 +52,7 @@ public class FourGeneralsTwoStoppingFaultLieutenant {
             Assert.assertTrue(commanderProcess.isDone());
             Assert.assertTrue(lieutenantProcess1.isDone());
             Assert.assertTrue(lieutenantProcess2.isDone());
-            Assert.assertTrue(lieutenantProcess3.isDone());
+            Assert.assertFalse(lieutenantProcess3.isDone());
 
         } catch (Exception e){
             e.printStackTrace();

@@ -52,6 +52,10 @@ public class ThreeGeneralsOneFaultyLieutenant {
 	            Assert.assertTrue(commanderProcess.isDone());
 	            Assert.assertTrue(lieutenantProcess1.isDone());
 	            Assert.assertTrue(lieutenantProcess2.isDone());
+	            
+	            Assert.assertEquals(order, commanderProcess.getFinalOrder());
+	            Assert.assertEquals(order, lieutenantProcess1.getFinalOrder());
+	            Assert.assertEquals(order, lieutenantProcess2.getFinalOrder());
 
 	        } catch (Exception e){
 	            e.printStackTrace();

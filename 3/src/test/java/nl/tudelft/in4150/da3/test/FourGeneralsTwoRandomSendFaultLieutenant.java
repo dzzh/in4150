@@ -29,7 +29,7 @@ public class FourGeneralsTwoRandomSendFaultLieutenant {
         DA_Byzantine_RMI lieutenantProcess2 = setup.getProcesses().get(2);
         DA_Byzantine_RMI lieutenantProcess3 = setup.getProcesses().get(3);
 
-        int maxTraitors = 1;
+        int maxTraitors = 2;
         Order order = Order.ATTACK;        
         
         try{

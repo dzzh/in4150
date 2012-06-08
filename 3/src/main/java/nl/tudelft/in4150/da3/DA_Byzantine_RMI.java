@@ -72,5 +72,11 @@ public interface DA_Byzantine_RMI extends Remote{
      * @throws RemoteException
      */
     public void decide() throws RemoteException;
+    
+    /**
+     * Returns the final order of the process.
+     * @throws RemoteException
+     */
+    public Order getFinalOrder() throws RemoteException;
 
 }

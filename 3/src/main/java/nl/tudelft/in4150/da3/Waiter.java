@@ -15,7 +15,7 @@ public class Waiter implements Runnable {
     private static Log LOGGER = LogFactory.getLog(Waiter.class);
 
     //delay in ms
-    private final static int DELAY = 100;
+    private final static int DELAY = 2000;
 
     private DA_Byzantine_RMI process;
     private boolean started = false;

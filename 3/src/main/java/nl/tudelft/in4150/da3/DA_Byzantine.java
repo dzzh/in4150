@@ -59,7 +59,6 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     private AFault fault = new NoFault(-1);
 
     /**
-     * Default constructor following RMI conventions
      *
      * @param urls  URLs of participating processes
      * @param index index of current process
@@ -87,7 +86,8 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 
     @Override
     public void receiveOrder(OrderMessage message) throws RemoteException {
-        LOGGER.debug(echoIndex() + "received " + message.getOrder() + " order from " + message.getSender());
+        LOGGER.debug(echoIndex() + "received " + message.getOrder() + " order from " + message.getSender() +
+        " with sequence " + message.getAlreadyProcessed());
         incomingMessages.put(message.getAlreadyProcessed(), message);
         sendAck(message);
 
@@ -102,7 +102,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 
     public void decide() {
         finalOrder = Node.decide(root);
-        LOGGER.info(echoIndex() + "...................................... decided to " + finalOrder.toString().toLowerCase());
+        LOGGER.info(echoIndex() + ".............................. decided to " + finalOrder.toString().toLowerCase());
         reportMissedMessages(root);
     }
 
@@ -123,14 +123,13 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
         //commander receives the message from the client and redistributes it
         if (message.getSender() == 0 && index == 0) {
             finalOrder = message.getOrder();
-            LOGGER.info(echoIndex() + "decided to " + finalOrder.toString().toLowerCase());
+            LOGGER.info(echoIndex() + ".............................. decided to " + finalOrder.toString().toLowerCase());
             broadcastOrder(currentMaxTraitors, totalTraitors, order, alreadyProcessed);
 
             //lieutenant receives the first message directly from commander
         } else if (message.getSender() == 0) {
             root.setOrder(message.getOrder());
             root.setReady(true);
-            result = root;
             broadcastOrder(currentMaxTraitors - 1, totalTraitors, order, alreadyProcessed);
 
             //lieutenants exchange messages
@@ -264,7 +263,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
                 // that already received the order, .i.e. the depth of the recursion.
                 Order orderWithFaultApplied = this.getFault().applyFaultyBehavior(order, alreadyProcessed.size());
 
-                if (!(getFault() instanceof NoFault)){
+                if (!(getFault() instanceof NoFault) && order != orderWithFaultApplied){
                     LOGGER.debug(echoIndex() + "is faulty. Sends " + orderWithFaultApplied + " to process " + i +
                     " (Non-faulty order is " + order + ")");
                 }
@@ -363,6 +362,11 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
         }
 
     }
+
+	@Override
+	public Order getFinalOrder() throws RemoteException {
+		return finalOrder;		
+	}
 
 }
 

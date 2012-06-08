@@ -132,7 +132,7 @@ public class Node {
 
         int rootReady = root.isReady() ? 1 : 0;
 
-        //ready condition: number of ready nodes >= total number of nodes - number of traitors
+        //ready condition: number of ready nodes > total number of nodes - number of traitors
         return (numReadyChildren + rootReady >= numChildren + 1 - maxTraitors);
     }
 
