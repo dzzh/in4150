@@ -44,7 +44,6 @@ public class TestSetup {
         for (String url : urls){
             try{
                 DA_Byzantine_RMI process = (DA_Byzantine_RMI) Naming.lookup(url);
-                process.reset();
                 processes.add(process);
 
             } catch (RemoteException e1){

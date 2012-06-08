@@ -22,19 +22,21 @@ public class SimpleTest{
 
     @Test
     public void testSimple(){
+        int numProcesses = 4;
         DA_Byzantine_RMI commanderProcess = setup.getProcesses().get(0);
         DA_Byzantine_RMI lieutenantProcess1 = setup.getProcesses().get(1);
         DA_Byzantine_RMI lieutenantProcess2 = setup.getProcesses().get(2);
-        DA_Byzantine_RMI lieutenantProcess3 = setup.getProcesses().get(2);
+        DA_Byzantine_RMI lieutenantProcess3 = setup.getProcesses().get(3);
 
         int maxTraitors = 1;
         Order order = Order.ATTACK;        
         
         try{
-            commanderProcess.reset();
-            lieutenantProcess1.reset();
-            lieutenantProcess2.reset();
-            lieutenantProcess3.reset();
+            commanderProcess.reset(numProcesses);
+            lieutenantProcess1.reset(numProcesses);
+            lieutenantProcess2.reset(numProcesses);
+            lieutenantProcess3.reset(numProcesses);
+
             
             // Gives new order to himself, like a root in a graph is it's own parent.
             // The already processed stays empty.
@@ -45,7 +47,7 @@ public class SimpleTest{
             message.setOrder(order);
             commanderProcess.receiveOrder(message);
             
-            Thread.sleep(10000);
+            Thread.sleep(5000);
             Assert.assertTrue(commanderProcess.isDone());
             Assert.assertTrue(lieutenantProcess1.isDone());
             Assert.assertTrue(lieutenantProcess2.isDone());
