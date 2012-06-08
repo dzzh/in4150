@@ -218,6 +218,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
         waiter = new Waiter(this);
         fault = new NoFault(-1);
         this.numProcesses = numProcesses;
+        fault = new NoFault(-1);
     }
 
     /**
@@ -338,6 +339,11 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
             reportMissedMessages(n);
         }
     }
+
+	@Override
+	public Order getFinalOrder() throws RemoteException {
+		return finalOrder;		
+	}
 
 }
 

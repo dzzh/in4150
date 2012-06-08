@@ -26,7 +26,7 @@ public class FourGeneralsOneRandomSendFaultLieutenant {
         DA_Byzantine_RMI commanderProcess = setup.getProcesses().get(0);
         DA_Byzantine_RMI lieutenantProcess1 = setup.getProcesses().get(1);
         DA_Byzantine_RMI lieutenantProcess2 = setup.getProcesses().get(2);
-        DA_Byzantine_RMI lieutenantProcess3 = setup.getProcesses().get(2);
+        DA_Byzantine_RMI lieutenantProcess3 = setup.getProcesses().get(3);
 
         int maxTraitors = 1;
         Order order = Order.ATTACK;        
