@@ -9,7 +9,8 @@ public class OrderMessage extends Message{
 	
 	private static final long serialVersionUID = -5697651885486403504L;
 	private Order order;
-	int maxTraitors;
+	int currentMaxTraitors;
+    int totalTraitors;
 	List<Integer> alreadyProcessed;
 	
 	public OrderMessage(int id, int sender, int receiver){
@@ -25,15 +26,23 @@ public class OrderMessage extends Message{
 		this.order = order;
 	}
 
-	public int getMaxTraitors() {
-		return maxTraitors;
+	public int getCurrentMaxTraitors() {
+		return currentMaxTraitors;
 	}
 
-	public void setMaxTraitors(int maxTraitors) {
-		this.maxTraitors = maxTraitors;
+	public void setCurrentMaxTraitors(int currentMaxTraitors) {
+		this.currentMaxTraitors = currentMaxTraitors;
 	}
 
-	public List<Integer> getAlreadyProcessed() {
+    public int getTotalTraitors() {
+        return totalTraitors;
+    }
+
+    public void setTotalTraitors(int totalTraitors) {
+        this.totalTraitors = totalTraitors;
+    }
+
+    public List<Integer> getAlreadyProcessed() {
 		return alreadyProcessed;
 	}
 
@@ -43,7 +52,7 @@ public class OrderMessage extends Message{
 	
 	@Override
 	public String toString() {
-		return "OrderMessage [order=" + order + ", maxTraitors=" + maxTraitors
+		return getSender() + "->" + getReceiver() + ": OrderMessage [order=" + order + ", currentMaxTraitors=" + currentMaxTraitors
 				+ ", alreadyProcessed=" + alreadyProcessed + "]";
 	}
 	

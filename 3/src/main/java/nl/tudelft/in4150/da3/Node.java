@@ -57,6 +57,10 @@ public class Node {
         return ready;
     }
 
+    public void setReady(boolean ready){
+        this.ready = ready;
+    }
+
     /**
      * Returns a node in the tree with a root at currentNode by traversing the path of sources
      * If there is an empty space somewhere in the path, a new node with default order is created there

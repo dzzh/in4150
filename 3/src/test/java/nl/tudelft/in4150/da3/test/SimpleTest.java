@@ -29,16 +29,16 @@ public class SimpleTest{
     public void testSimple(){
         DA_Byzantine_RMI commanderProcess = (DA_Byzantine_RMI) setup.getProcesses().get(0);
         TestThread thread1 = new TestThread(commanderProcess);
-        new Thread(thread1).start();
+        //new Thread(thread1).start();
         DA_Byzantine_RMI lieutenantProcess1 = (DA_Byzantine_RMI) setup.getProcesses().get(1);
         TestThread thread2 = new TestThread(lieutenantProcess1);
-        new Thread(thread2).start();
+        //new Thread(thread2).start();
         DA_Byzantine_RMI lieutenantProcess2 = (DA_Byzantine_RMI) setup.getProcesses().get(2);
         TestThread thread3 = new TestThread(lieutenantProcess2);
-        new Thread(thread3).start();
+        //new Thread(thread3).start();
         DA_Byzantine_RMI lieutenantProcess3 = (DA_Byzantine_RMI) setup.getProcesses().get(2);
         TestThread thread4 = new TestThread(lieutenantProcess3);
-        new Thread(thread4).start();
+        //new Thread(thread4).start();
 
         int maxTraitors = 1;
         Order order = Order.ATTACK;        
@@ -53,7 +53,8 @@ public class SimpleTest{
             // The already processed stays empty.
             // Both indicate that this process is the commander.
             OrderMessage message = new OrderMessage(0, commanderProcess.getIndex(), commanderProcess.getIndex());
-            message.setMaxTraitors(maxTraitors);
+            message.setCurrentMaxTraitors(maxTraitors);
+            message.setTotalTraitors(maxTraitors);
             message.setOrder(order);
             commanderProcess.receiveOrder(message);
             

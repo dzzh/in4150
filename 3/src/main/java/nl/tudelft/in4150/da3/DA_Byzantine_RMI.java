@@ -59,4 +59,10 @@ public interface DA_Byzantine_RMI extends Remote{
      */
     public void reset() throws RemoteException;
 
+    /**
+     * Runs a decision process after the decision tree is built. Is invoked internally.
+     * @throws RemoteException
+     */
+    public void decide() throws RemoteException;
+
 }

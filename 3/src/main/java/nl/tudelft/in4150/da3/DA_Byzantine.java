@@ -53,7 +53,9 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     private long lastOutcomingCheck = 0;
 
     //the root of the decision tree
-    private Node root = new Node(0, Order.getDefaultOrder());
+    private Node root = new Node(0);
+
+    private Waiter waiter = new Waiter(this);
 
     /**
      * Default constructor following RMI conventions
@@ -92,12 +94,17 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 
         Node messageInTheTree = process(message);
 
-        if (messageInTheTree != null && Node.isTreeReady(messageInTheTree, numProcesses, message.getMaxTraitors())){
-            Node.decide(root);
-            LOGGER.info(echoIndex() + "decided " + finalOrder);
+        if (messageInTheTree != null && Node.isTreeReady(root, numProcesses, message.getTotalTraitors()) &&
+                !isDone() && !waiter.isStarted()){
+
+            new Thread(waiter).start();
         }
     }
 
+    public void decide(){
+        finalOrder = Node.decide(root);
+        LOGGER.info(echoIndex() + "decided to " + finalOrder.toString().toLowerCase());
+    }
 
     /**
      * Apply the Lamport-Pease-Shostak distributed algorithm for solving the Byzantine Generals problem.
@@ -109,25 +116,28 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
         Node result = null;
 
         Order order = message.getOrder();
-        Integer maxTraitors = message.getMaxTraitors();
+        Integer currentMaxTraitors = message.getCurrentMaxTraitors();
+        Integer totalTraitors = message.getTotalTraitors();
         List<Integer> alreadyProcessed = message.getAlreadyProcessed();
 
         //commander receives the message from the client and redistributes it
         if (message.getSender() == 0 && index == 0){
             finalOrder = message.getOrder();
-            broadcastOrder(maxTraitors, order, alreadyProcessed);
+            LOGGER.info(echoIndex() + "decided to " + finalOrder.toString().toLowerCase());
+            broadcastOrder(currentMaxTraitors, totalTraitors, order, alreadyProcessed);
 
         //lieutenant receives the first message directly from commander
         } else if (message.getSender() == 0){
             root.setOrder(message.getOrder());
-            broadcastOrder(maxTraitors - 1, order, alreadyProcessed);
+            root.setReady(true);
+            broadcastOrder(currentMaxTraitors - 1, totalTraitors, order, alreadyProcessed);
 
         //lieutenants exchange messages
         } else {
             result = Node.findNodeBySourcePath(root, alreadyProcessed.subList(1, alreadyProcessed.size()));
             result.setOrder(order);
-            if (maxTraitors != 0){
-                broadcastOrder(maxTraitors - 1, order, alreadyProcessed);
+            if (currentMaxTraitors != 0){
+                broadcastOrder(currentMaxTraitors - 1, totalTraitors, order, alreadyProcessed);
             }
         }
 
@@ -247,13 +257,14 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     }
 
 
-    private void broadcastOrder(int maxTraitors, Order order, List<Integer> alreadyProcessed) {
+    private void broadcastOrder(int currentMaxTraitors, int totalTraitors, Order order, List<Integer> alreadyProcessed) {
         for (int i = 0; i < numProcesses; i++) {
             if (index != i && !alreadyProcessed.contains(i)) {
                 DA_Byzantine_RMI destination = getProcess(urls[i]);
 
                 OrderMessage messageCopy = getOrderMessageTemplate(i);
-                messageCopy.setMaxTraitors(maxTraitors);
+                messageCopy.setCurrentMaxTraitors(currentMaxTraitors);
+                messageCopy.setTotalTraitors(totalTraitors);
                 messageCopy.setOrder(order);
                 messageCopy.setAlreadyProcessed(new LinkedList<Integer>(alreadyProcessed));
                 messageCopy.getAlreadyProcessed().add(index);
