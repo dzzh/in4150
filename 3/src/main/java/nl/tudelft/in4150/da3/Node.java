@@ -5,6 +5,7 @@ import java.util.List;
 
 /**
  * Represents the node in the decision tree that is used for storing intermediate decisions
+ * and contains the tree operations
  */
 public class Node {
 
@@ -13,6 +14,7 @@ public class Node {
     private int source;
     private Order order;
     private List<Node> children;
+    private Node parent = null;
     private boolean ready;
 
     public Node(int source) {
@@ -43,6 +45,7 @@ public class Node {
 
     public void addChild(Node child){
         children.add(child);
+        child.parent = this;
     }
 
     public void setOrder(Order order){
@@ -61,7 +64,7 @@ public class Node {
      * @param path list of indices to traverse
      * @return node
      */
-    public static Node findNodeBySourcePath(Node currentNode, List<Integer> path){
+    protected static Node findNodeBySourcePath(Node currentNode, List<Integer> path){
 
         if (path.isEmpty()){
             return currentNode;
@@ -92,8 +95,82 @@ public class Node {
      * @param level level of root in the whole
      * @return
      */
-    private boolean isTreeReady(Node root, int n, int f, int level){
+    protected static boolean isTreeReady(Node root, int numProcesses, int maxTraitors){
 
+        if (root.getChildren().isEmpty()){
+            return root.isReady();
+        }
+
+        int rootLevel = root.getNodeLevel();
+        int numChildren = numProcesses - 2 - rootLevel;
+        int numReadyChildren = 0;
+        boolean isBottom = (numProcesses - rootLevel == 2);
+
+        if (!isBottom){
+            for (Node n : root.getChildren()){
+                if (isTreeReady(n, rootLevel++, maxTraitors - 1)){
+                    numReadyChildren++;
+                }
+            }
+        } else {
+            for (Node n : root.getChildren()){
+                if (n.isReady()){
+                    numReadyChildren++;
+                }
+            }
+        }
+
+        if (numReadyChildren >= numChildren - maxTraitors){
+            return true;
+        } else{
+            return false;
+        }
+    }
+
+    private int getNodeLevel(){
+        Node root = getRoot();
+        return findNodeLevel(this, root, 0);
+    }
+
+    private int findNodeLevel(Node node, Node root, int currentLevel){
+
+        int level = 0;
+
+        if (root.getChildren().isEmpty()){
+            if (root == node){
+                return currentLevel;
+            } else{
+                return 0;
+            }
+
+        } else {
+            for (Node n : root.getChildren()){
+                int childLevel = findNodeLevel(node, n, currentLevel++);
+                if (childLevel > 0){
+                    level = childLevel;
+                    break;
+                }
+            }
+        }
+
+        return level;
+    }
+
+    private Node getRoot(){
+        Node root = this;
+        while (root.parent != null){
+            root = root.parent;
+        }
+        return root;
+    }
+
+    protected static Order decide(Node root){
+        List<Order> orders = new LinkedList<Order>();
+        orders.add(root.getOrder());
+        for (Node n : root.getChildren()){
+            orders.add(decide(n));
+        }
+        return Order.getMostFrequentOrder(orders);
     }
 
 }

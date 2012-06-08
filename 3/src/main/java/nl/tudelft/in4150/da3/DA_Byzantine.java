@@ -90,13 +90,13 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
         incomingMessages.put(message.getAlreadyProcessed(), message);
         sendAck(message);
 
-        process(message);
+        Node messageInTheTree = process(message);
 
-        if (isTreeReady()){
-            decide();
+        if (messageInTheTree != null && Node.isTreeReady(messageInTheTree, numProcesses, message.getMaxTraitors())){
+            Node.decide(root);
+            LOGGER.info(echoIndex() + "decided " + finalOrder);
         }
     }
-
 
 
     /**
@@ -104,7 +104,9 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
      *
      * @param message The message to be processed.
      */
-    private void process(OrderMessage message) {
+    private Node process(OrderMessage message) {
+
+        Node result = null;
 
         Order order = message.getOrder();
         Integer maxTraitors = message.getMaxTraitors();
@@ -122,12 +124,14 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 
         //lieutenants exchange messages
         } else {
-            Node node = Node.findNodeBySourcePath(root, alreadyProcessed.subList(1, alreadyProcessed.size()));
-            node.setOrder(order);
+            result = Node.findNodeBySourcePath(root, alreadyProcessed.subList(1, alreadyProcessed.size()));
+            result.setOrder(order);
             if (maxTraitors != 0){
                 broadcastOrder(maxTraitors - 1, order, alreadyProcessed);
             }
         }
+
+        return result;
     }
 
     private void sendAck(OrderMessage orderMessage) {
