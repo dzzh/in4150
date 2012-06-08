@@ -261,7 +261,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 
                 // Apply faulty behavior. The iteration is indicated by the sequence of generals
                 // that already received the order, .i.e. the depth of the recursion.
-                Order orderWithFaultApplied = this.getFault().applyFaultyBehavior(order, alreadyProcessed.size() + 1);
+                Order orderWithFaultApplied = this.getFault().applyFaultyBehavior(order, alreadyProcessed.size());
 
                 if (!(getFault() instanceof NoFault)){
                     LOGGER.debug(echoIndex() + "is faulty. Sends " + orderWithFaultApplied + " to process " + i);
