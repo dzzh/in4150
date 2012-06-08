@@ -6,3 +6,9 @@ network.cfg
 .classpath
 .project
 .settings/
+*.pdf
+*.aux
+*.bbl
+*.blg
+*.log
+*.rev
