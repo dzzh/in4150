@@ -29,16 +29,12 @@ public class SimpleTest{
     public void testSimple(){
         DA_Byzantine_RMI commanderProcess = (DA_Byzantine_RMI) setup.getProcesses().get(0);
         TestThread thread1 = new TestThread(commanderProcess);
-        //new Thread(thread1).start();
         DA_Byzantine_RMI lieutenantProcess1 = (DA_Byzantine_RMI) setup.getProcesses().get(1);
         TestThread thread2 = new TestThread(lieutenantProcess1);
-        //new Thread(thread2).start();
         DA_Byzantine_RMI lieutenantProcess2 = (DA_Byzantine_RMI) setup.getProcesses().get(2);
         TestThread thread3 = new TestThread(lieutenantProcess2);
-        //new Thread(thread3).start();
         DA_Byzantine_RMI lieutenantProcess3 = (DA_Byzantine_RMI) setup.getProcesses().get(2);
         TestThread thread4 = new TestThread(lieutenantProcess3);
-        //new Thread(thread4).start();
 
         int maxTraitors = 1;
         Order order = Order.ATTACK;        

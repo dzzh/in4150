@@ -1,5 +1,8 @@
 package nl.tudelft.in4150.da3;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.rmi.RemoteException;
 
 /**
@@ -8,6 +11,8 @@ import java.rmi.RemoteException;
  * late messages to be delivered and added to the tree.
  */
 public class Waiter implements Runnable {
+
+    private static Log LOGGER = LogFactory.getLog(Waiter.class);
 
     //delay in ms
     private final static int DELAY = 100;
@@ -26,13 +31,13 @@ public class Waiter implements Runnable {
         started = true;
 
         try{
+            LOGGER.debug("[" + process.getIndex() + "] waiter started");
+            //wait for late messages
             Thread.sleep(DELAY);
-        } catch (InterruptedException e){
-            throw new RuntimeException(e);
-        }
-        try{
             //starts the decision process after the delay
             process.decide();
+        } catch (InterruptedException e){
+            throw new RuntimeException(e);
         } catch (RemoteException e){
             throw new RuntimeException(e);
         }

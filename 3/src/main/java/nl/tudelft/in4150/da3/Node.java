@@ -5,7 +5,7 @@ import java.util.List;
 
 /**
  * Represents the node in the decision tree that is used for storing intermediate decisions
- * and contains the tree operations
+ * and contains the graph operations to modify the tree
  */
 public class Node {
 
@@ -93,11 +93,12 @@ public class Node {
 
     /**
      * Determines for the subtree whether it is ready to make a decision
+     * The tree is ready if enough children of the root are ready
      * @param root subtree root node
-     * @param n total number of processes participating
-     * @param f maximum number of failing processes
-     * @param level level of root in the whole
-     * @return
+     * @param root root of the subtree
+     * @param numProcesses total number of processes participating in messages exchange
+     * @param maxTraitors maximum amount of potentially failing processes at this subtree level
+     * @return true if the subtree is ready to initiate decision making process
      */
     protected static boolean isTreeReady(Node root, int numProcesses, int maxTraitors){
 
@@ -108,6 +109,8 @@ public class Node {
         int rootLevel = root.getNodeLevel();
         int numChildren = numProcesses - 2 - rootLevel;
         int numReadyChildren = 0;
+
+        //at bottom level we have nodes with exactly one child
         boolean isBottom = (numProcesses - rootLevel == 2);
 
         if (!isBottom){
@@ -124,18 +127,28 @@ public class Node {
             }
         }
 
-        if (numReadyChildren >= numChildren - maxTraitors){
-            return true;
-        } else{
-            return false;
-        }
+        int rootReady = root.isReady() ? 1 : 0;
+
+        //ready condition: number of ready nodes >= total number of nodes - number of traitors
+        return (numReadyChildren + rootReady >= numChildren + 1 - maxTraitors);
     }
 
+    /**
+     * Returns a level of node in the tree given that root level is 0
+     * @return level of this node
+     */
     private int getNodeLevel(){
         Node root = getRoot();
         return findNodeLevel(this, root, 0);
     }
 
+    /**
+     * Returns a level of the node for the subtree with a given root, provided the root level
+     * @param node node to look for
+     * @param root subtree root
+     * @param currentLevel root level
+     * @return level of node
+     */
     private int findNodeLevel(Node node, Node root, int currentLevel){
 
         int level = 0;
@@ -160,6 +173,10 @@ public class Node {
         return level;
     }
 
+    /**
+     * Returns tree root
+     * @return root
+     */
     private Node getRoot(){
         Node root = this;
         while (root.parent != null){
@@ -168,6 +185,11 @@ public class Node {
         return root;
     }
 
+    /**
+     * Makes final decision on the tree recursively applying the majority function
+     * @param root tree root
+     * @return decision
+     */
     protected static Order decide(Node root){
         List<Order> orders = new LinkedList<Order>();
         orders.add(root.getOrder());

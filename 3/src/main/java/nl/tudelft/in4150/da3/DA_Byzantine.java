@@ -38,9 +38,6 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     //Counter of a messages sent by the process
     private int nextMessageId = 1;
 
-    //list of orders come to a decision
-    //private Map<String, Order> orders = new HashMap<String, Order>();
-
     //final decision
     private Order finalOrder = null;
 
@@ -77,7 +74,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 
     @Override
     public void run() {
-        //intentionally left blank
+        //intentionally left blank and dedicated to the first page in O'Reilly titles
     }
 
     @Override
@@ -96,7 +93,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 
         if (messageInTheTree != null && Node.isTreeReady(root, numProcesses, message.getTotalTraitors()) &&
                 !isDone() && !waiter.isStarted()){
-
+            //wait for the late messages and decide
             new Thread(waiter).start();
         }
     }
