@@ -34,7 +34,7 @@ public class ThreeGeneralsWithFaultyCommanderTest {
             commanderProcess.reset(numProcesses);
             lieutenantProcess1.reset(numProcesses);
             lieutenantProcess2.reset(numProcesses);
-            commanderProcess.setFault(new ForgedMessageFault(1, 0.5));
+            commanderProcess.setFault(new ForgedMessageFault(0, 0.5));
 
             //Assign order to the root process to initiate algorithm execution
             OrderMessage message = new OrderMessage(0, commanderProcess.getIndex(), commanderProcess.getIndex());

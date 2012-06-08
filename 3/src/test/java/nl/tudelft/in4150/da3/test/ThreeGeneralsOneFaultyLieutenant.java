@@ -48,7 +48,7 @@ public class ThreeGeneralsOneFaultyLieutenant {
 	            message.setOrder(order);
 	            commanderProcess.receiveOrder(message);
 
-	            Thread.sleep(10000);
+	            Thread.sleep(5000);
 	            Assert.assertTrue(commanderProcess.isDone());
 	            Assert.assertTrue(lieutenantProcess1.isDone());
 	            Assert.assertTrue(lieutenantProcess2.isDone());

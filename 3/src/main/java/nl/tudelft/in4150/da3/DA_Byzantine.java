@@ -52,7 +52,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     private long lastOutcomingCheck = 0;
 
     //the root of the decision tree
-    private Node root = new Node(0);
+    private Node root;
 
     private Waiter waiter = new Waiter(this);
 
@@ -72,6 +72,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
         this.index = index;
         this.urls = urls;
         this.numProcesses = urls.length;
+        root = new Node(0);
     }
 
     @Override
@@ -101,7 +102,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 
     public void decide() {
         finalOrder = Node.decide(root);
-        LOGGER.info(echoIndex() + "decided to " + finalOrder.toString().toLowerCase());
+        LOGGER.info(echoIndex() + "...................................... decided to " + finalOrder.toString().toLowerCase());
         reportMissedMessages(root);
     }
 
@@ -129,6 +130,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
         } else if (message.getSender() == 0) {
             root.setOrder(message.getOrder());
             root.setReady(true);
+            result = root;
             broadcastOrder(currentMaxTraitors - 1, totalTraitors, order, alreadyProcessed);
 
             //lieutenants exchange messages
@@ -209,6 +211,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 
     @Override
     public void reset(int numProcesses) {
+        this.numProcesses = numProcesses;
         nextMessageId = 1;
         finalOrder = null;
         incomingMessages = new HashMap<List<Integer>, OrderMessage>();
@@ -217,7 +220,6 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
         root = new Node(0);
         waiter = new Waiter(this);
         fault = new NoFault(-1);
-        this.numProcesses = numProcesses;
     }
 
     /**
@@ -330,13 +332,36 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
      * @param root decision tree root
      */
     protected void reportMissedMessages(Node root) {
+
+        List<Integer> sourceSequence = Node.getSourceSequence(root, null);
+
         if (!root.isReady()) {
-            LOGGER.info(echoIndex() + "did not receive message with sequence " + Node.getSourceSequence(root, null));
+            if (!sourceSequence.contains(index)){
+                LOGGER.info(echoIndex() + "did not receive message with sequence " + sourceSequence);
+            }
+        }
+
+        List<Integer> childrenSources = new LinkedList<Integer>();
+
+        for (Node n :root.getChildren()){
+            childrenSources.add(n.getSource());
+        }
+
+        if (root.getChildren().size() > 0){
+            for (int i = 0; i < numProcesses; i++){
+                if (i != index){
+                    if (!sourceSequence.contains(i) && !childrenSources.contains(i)){
+                        Node missedChild = new Node(i);
+                        root.addChild(missedChild);
+                    }
+                }
+            }
         }
 
         for (Node n : root.getChildren()) {
             reportMissedMessages(n);
         }
+
     }
 
 }
