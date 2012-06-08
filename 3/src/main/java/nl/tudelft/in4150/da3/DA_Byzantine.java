@@ -52,14 +52,13 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     private long lastOutcomingCheck = 0;
 
     //the root of the decision tree
-    private Node root = new Node(0);
+    private Node root;
 
     private Waiter waiter = new Waiter(this);
 
     private AFault fault = new NoFault(-1);
 
     /**
-     * Default constructor following RMI conventions
      *
      * @param urls  URLs of participating processes
      * @param index index of current process
@@ -72,6 +71,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
         this.index = index;
         this.urls = urls;
         this.numProcesses = urls.length;
+        root = new Node(0);
     }
 
     @Override
@@ -86,7 +86,8 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 
     @Override
     public void receiveOrder(OrderMessage message) throws RemoteException {
-        LOGGER.debug(echoIndex() + "received " + message.getOrder() + " order from " + message.getSender());
+        LOGGER.debug(echoIndex() + "received " + message.getOrder() + " order from " + message.getSender() +
+        " with sequence " + message.getAlreadyProcessed());
         incomingMessages.put(message.getAlreadyProcessed(), message);
         sendAck(message);
 
@@ -101,7 +102,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 
     public void decide() {
         finalOrder = Node.decide(root);
-        LOGGER.info(echoIndex() + "decided to " + finalOrder.toString().toLowerCase());
+        LOGGER.info(echoIndex() + ".............................. decided to " + finalOrder.toString().toLowerCase());
         reportMissedMessages(root);
     }
 
@@ -122,7 +123,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
         //commander receives the message from the client and redistributes it
         if (message.getSender() == 0 && index == 0) {
             finalOrder = message.getOrder();
-            LOGGER.info(echoIndex() + "decided to " + finalOrder.toString().toLowerCase());
+            LOGGER.info(echoIndex() + ".............................. decided to " + finalOrder.toString().toLowerCase());
             broadcastOrder(currentMaxTraitors, totalTraitors, order, alreadyProcessed);
 
             //lieutenant receives the first message directly from commander
@@ -209,6 +210,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 
     @Override
     public void reset(int numProcesses) {
+        this.numProcesses = numProcesses;
         nextMessageId = 1;
         finalOrder = null;
         incomingMessages = new HashMap<List<Integer>, OrderMessage>();
@@ -216,8 +218,6 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
         lastOutcomingCheck = 0;
         root = new Node(0);
         waiter = new Waiter(this);
-        fault = new NoFault(-1);
-        this.numProcesses = numProcesses;
         fault = new NoFault(-1);
     }
 
@@ -263,7 +263,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
                 // that already received the order, .i.e. the depth of the recursion.
                 Order orderWithFaultApplied = this.getFault().applyFaultyBehavior(order, alreadyProcessed.size());
 
-                if (!(getFault() instanceof NoFault)){
+                if (!(getFault() instanceof NoFault) && order != orderWithFaultApplied){
                     LOGGER.debug(echoIndex() + "is faulty. Sends " + orderWithFaultApplied + " to process " + i +
                     " (Non-faulty order is " + order + ")");
                 }
@@ -331,13 +331,36 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
      * @param root decision tree root
      */
     protected void reportMissedMessages(Node root) {
+
+        List<Integer> sourceSequence = Node.getSourceSequence(root, null);
+
         if (!root.isReady()) {
-            LOGGER.info(echoIndex() + "did not receive message with sequence " + Node.getSourceSequence(root, null));
+            if (!sourceSequence.contains(index)){
+                LOGGER.info(echoIndex() + "did not receive message with sequence " + sourceSequence);
+            }
+        }
+
+        List<Integer> childrenSources = new LinkedList<Integer>();
+
+        for (Node n :root.getChildren()){
+            childrenSources.add(n.getSource());
+        }
+
+        if (root.getChildren().size() > 0){
+            for (int i = 0; i < numProcesses; i++){
+                if (i != index){
+                    if (!sourceSequence.contains(i) && !childrenSources.contains(i)){
+                        Node missedChild = new Node(i);
+                        root.addChild(missedChild);
+                    }
+                }
+            }
         }
 
         for (Node n : root.getChildren()) {
             reportMissedMessages(n);
         }
+
     }
 
 	@Override

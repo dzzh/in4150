@@ -1,7 +1,9 @@
 package nl.tudelft.in4150.da3;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Represents the node in the decision tree that is used for storing intermediate decisions
@@ -16,6 +18,7 @@ public class Node {
     private List<Node> children;
     private Node parent = null;
     private boolean ready;
+    private static Map<Integer, Node> treeCache = new HashMap<Integer, Node>();
 
     public Node(int source) {
         this.source = source;
@@ -129,7 +132,7 @@ public class Node {
 
         int rootReady = root.isReady() ? 1 : 0;
 
-        //ready condition: number of ready nodes >= total number of nodes - number of traitors
+        //ready condition: number of ready nodes > total number of nodes - number of traitors
         return (numReadyChildren + rootReady >= numChildren + 1 - maxTraitors);
     }
 
@@ -212,11 +215,15 @@ public class Node {
         }
 
         if (currentNode.parent == null){
+            currentSequence.add(0, 0);
             return currentSequence;
         } else{
             currentSequence.add(0, currentNode.source);
             return getSourceSequence(currentNode.parent, currentSequence);
         }
+    }
 
+    public String toString(){
+        return source + ", " + order + ", " + parent + ", " + children.size() + ", " + ready;
     }
 }
