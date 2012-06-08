@@ -5,7 +5,6 @@ import nl.tudelft.in4150.da3.message.OrderMessage;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.Logger;
 
 import java.net.MalformedURLException;
 import java.rmi.Naming;
@@ -22,7 +21,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 
     private static final long serialVersionUID = 2526720373028386278L;
     private static Log LOGGER = LogFactory.getLog(DA_Byzantine.class);
-    private static final int TIME_OUT_MS = 500;
+    private static final int TIME_OUT_MS = 20;
 
     //Cache to fasten lookup operations in remote registers
     private Map<String, DA_Byzantine_RMI> processCache;
@@ -101,6 +100,7 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     public void decide(){
         finalOrder = Node.decide(root);
         LOGGER.info(echoIndex() + "decided to " + finalOrder.toString().toLowerCase());
+        reportMissedMessages(root);
     }
 
     /**
@@ -186,8 +186,8 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     /**
      * Constructs a template of a new message
      *
-     * @param receiver
-     * @return
+     * @param receiver index of message receiver
+     * @return order message template
      */
     private OrderMessage getOrderMessageTemplate(int receiver) {
         nextMessageId++;
@@ -197,8 +197,8 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
     /**
      * Constructs a template of a new acknowledgment message
      *
-     * @param receiver
-     * @return
+     * @param receiver index of a message receiver
+     * @return ack message template
      */
     private AckMessage getAckMessageTemplate(int receiver) {
         nextMessageId++;
@@ -207,7 +207,13 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 
     @Override
     public void reset() {
-
+        nextMessageId = 1;
+        finalOrder = null;
+        incomingMessages = new HashMap<List<Integer>, OrderMessage>();
+        outgoingMessages = new LinkedList<OrderMessage>();
+        lastOutcomingCheck = 0;
+        root = new Node(0);
+        waiter = new Waiter(this);
     }
 
     /**
