@@ -26,6 +26,8 @@ public class ThreeGeneralsOneFaultyLieutenant {
 
 	    @Test
 	    public void test(){
+	        int numProcesses = 3;
+
 	        DA_Byzantine_RMI commanderProcess = setup.getProcesses().get(0);
 	        DA_Byzantine_RMI lieutenantProcess1 = setup.getProcesses().get(1);
 	        DA_Byzantine_RMI lieutenantProcess2 = setup.getProcesses().get(2);
@@ -34,9 +36,9 @@ public class ThreeGeneralsOneFaultyLieutenant {
 	        Order order = Order.ATTACK;        
 	        
 	        try{
-	            commanderProcess.reset();
-	            lieutenantProcess1.reset();
-	            lieutenantProcess2.reset();
+	            commanderProcess.reset(numProcesses);
+	            lieutenantProcess1.reset(numProcesses);
+	            lieutenantProcess2.reset(numProcesses);
 	            lieutenantProcess1.setFault(new ForgedMessageFault(1, 0.5));
 
 	            //Assign order to the root process to initiate algorithm execution

@@ -22,6 +22,8 @@ public class FourGeneralsTwoForgedMessageFaultLieutenants {
 
     @Test
     public void test(){
+        int numProcesses = 4;
+
         DA_Byzantine_RMI commanderProcess = setup.getProcesses().get(0);
         DA_Byzantine_RMI lieutenantProcess1 = setup.getProcesses().get(1);
         DA_Byzantine_RMI lieutenantProcess2 = setup.getProcesses().get(2);
@@ -31,10 +33,10 @@ public class FourGeneralsTwoForgedMessageFaultLieutenants {
         Order order = Order.ATTACK;        
         
         try{
-            commanderProcess.reset();
-            lieutenantProcess1.reset();
-            lieutenantProcess2.reset();
-            lieutenantProcess3.reset();
+            commanderProcess.reset(numProcesses);
+            lieutenantProcess1.reset(numProcesses);
+            lieutenantProcess2.reset(numProcesses);
+            lieutenantProcess3.reset(numProcesses);
             lieutenantProcess1.setFault(new ForgedMessageFault(0, 1));
             lieutenantProcess2.setFault(new ForgedMessageFault(0, 1));
             
