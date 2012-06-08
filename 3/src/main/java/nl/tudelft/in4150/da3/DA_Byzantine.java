@@ -345,5 +345,10 @@ public class DA_Byzantine extends UnicastRemoteObject implements DA_Byzantine_RM
 		return finalOrder;		
 	}
 
+	@Override
+	public int getNumberOfReceivedMessages() throws RemoteException {
+		return incomingMessages.size();
+	}
+
 }
 

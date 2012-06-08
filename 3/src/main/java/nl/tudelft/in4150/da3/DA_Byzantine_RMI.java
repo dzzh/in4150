@@ -78,5 +78,12 @@ public interface DA_Byzantine_RMI extends Remote{
      * @throws RemoteException
      */
     public Order getFinalOrder() throws RemoteException;
+    
+    /**
+     * Returns the number of received messages.
+     * @return
+     * @throws RemoteException
+     */
+    public int getNumberOfReceivedMessages() throws RemoteException;
 
 }

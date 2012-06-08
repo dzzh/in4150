@@ -9,6 +9,10 @@ import java.io.Serializable;
  */
 public abstract class AFault implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7578070667479981854L;
 	protected int iterationOfFailure;
 	
 	public AFault(int iterationOfFailure){

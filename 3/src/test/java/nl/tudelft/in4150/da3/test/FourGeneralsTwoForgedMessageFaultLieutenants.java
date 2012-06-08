@@ -50,10 +50,25 @@ public class FourGeneralsTwoForgedMessageFaultLieutenants {
             commanderProcess.receiveOrder(message);
             
             Thread.sleep(10000);
+            
+            int totalNumberOfReceivedMessages = commanderProcess.getNumberOfReceivedMessages();
+            totalNumberOfReceivedMessages += lieutenantProcess1.getNumberOfReceivedMessages();
+            totalNumberOfReceivedMessages += lieutenantProcess2.getNumberOfReceivedMessages();
+            totalNumberOfReceivedMessages += lieutenantProcess3.getNumberOfReceivedMessages();
+            
+            System.out.println("Total number of messages send: " + totalNumberOfReceivedMessages);
+            
             Assert.assertTrue(commanderProcess.isDone());
             Assert.assertTrue(lieutenantProcess1.isDone());
             Assert.assertTrue(lieutenantProcess2.isDone());
             Assert.assertTrue(lieutenantProcess3.isDone());
+            
+            Assert.assertEquals(order, commanderProcess.getFinalOrder());
+            Assert.assertEquals(order, lieutenantProcess1.getFinalOrder());
+            Assert.assertEquals(order, lieutenantProcess2.getFinalOrder());
+            Assert.assertEquals(order, lieutenantProcess3.getFinalOrder());
+            
+
 
         } catch (Exception e){
             e.printStackTrace();

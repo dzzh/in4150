@@ -47,11 +47,23 @@ public class FourGeneralsOneForgedMessageFaultLieutenant {
             message.setOrder(order);
             commanderProcess.receiveOrder(message);
             
-            Thread.sleep(10000);
+            Thread.sleep(2000);
             Assert.assertTrue(commanderProcess.isDone());
             Assert.assertTrue(lieutenantProcess1.isDone());
             Assert.assertTrue(lieutenantProcess2.isDone());
             Assert.assertTrue(lieutenantProcess3.isDone());
+            
+            Assert.assertEquals(order, commanderProcess.getFinalOrder());
+            Assert.assertEquals(order, lieutenantProcess1.getFinalOrder());
+            Assert.assertEquals(order, lieutenantProcess2.getFinalOrder());
+            Assert.assertEquals(order, lieutenantProcess3.getFinalOrder());
+            
+            int totalNumberOfReceivedMessages = commanderProcess.getNumberOfReceivedMessages();
+            totalNumberOfReceivedMessages += lieutenantProcess1.getNumberOfReceivedMessages();
+            totalNumberOfReceivedMessages += lieutenantProcess2.getNumberOfReceivedMessages();
+            totalNumberOfReceivedMessages += lieutenantProcess3.getNumberOfReceivedMessages();
+            
+            System.out.println("Total number of messages send: " + totalNumberOfReceivedMessages);
 
         } catch (Exception e){
             e.printStackTrace();

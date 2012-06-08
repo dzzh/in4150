@@ -81,4 +81,89 @@ In the tests we reset the processes and submit the order to the commander. Also,
 
 \section{Test results}
 
+The sections below show a number of testcases for the Byzantine Generals problem.
+
+\subsection{Four Gererals No Traitors}
+
+\subsubsection*{Parameters}
+\begin{itemize}
+\item 4 Generals
+\item 0 Traitors
+\item Attack is the initial order from the commander
+\end{itemize}
+
+With these parameters the expected number of messages to be send is \(O(4^{0+1}) = 4\)
+
+\subsubsection*{What is tested}
+\begin{enumerate}
+\item Do the processes finish
+\item Does the order of processes equal the intial order from the commander
+\item What is the total number of send messages
+\end{enumerate}
+
+\subsubsection*{Results}
+\begin{enumerate}
+\item All processes finish
+\item For all processes the order equals the initial order form the commander
+\item The total number of messages send is 10
+\end{enumerate}
+
+
+
+
+
+\subsection{Four Gererals One Traitors with Forged Message Fault}
+
+\subsubsection*{Parameters}
+\begin{itemize}
+\item 4 Generals
+\item 1 Traitors with a forged message fault
+\item Attack is the initial order from the commander
+\end{itemize}
+
+With these parameters the expected number of messages to be send is \(O(4^{1+1}) = 16\)
+
+\subsubsection*{What is tested}
+\begin{enumerate}
+\item Do the processes finish
+\item Does the order of processes equal the intial order from the commander
+\item What is the total number of send messages
+\end{enumerate}
+
+\subsubsection*{Results}
+\begin{enumerate}
+\item All processes finish
+\item For all processes the order equals the initial order form the commander
+\item The total number of messages send is 10
+\end{enumerate}
+
+
+
+
+
+\subsection{Four Gererals Two Traitors with Forged Message Fault}
+
+\subsubsection*{Parameters}
+\begin{itemize}
+\item 4 Generals
+\item 2 Traitors with a forged message fault
+\item Attack is the initial order from the commander
+\end{itemize}
+
+With these parameters the expected number of messages to be send is \(O(4^{2+1}) = 64\)
+
+\subsubsection*{What is tested}
+\begin{enumerate}
+\item Do the processes finish
+\item Does the order of processes equal the intial order from the commander
+\item What is the total number of send messages
+\end{enumerate}
+
+\subsubsection*{Results}
+\begin{enumerate}
+\item Not all processes finish
+\item Not for every process the order equals the initial order form the commander
+\item The total number of messages send is 16
+\end{enumerate}
+
 \end{document}
