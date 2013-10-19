@@ -1,6 +1,0 @@
-Coursework for IN4150 Distributed algorithms course at TU Delft, implementing various distributed algorithms with Java RMI.
-
-Project 1: Point-to-point message exchange with Schiper-Eggli-Sandoz protocol for causal ordering.
-Project 2: Suzuki-Kasami mutual exclusion algorithm.
-
-Both projects contain server and client parts, with server instances able to run within several different physical machines. The configuration of network is maintained in a .cfg file. Client is emulated with JUnit tests. More detailed information can be found in README files in project roots.
